@@ -7,3 +7,4 @@ A Roblox incremental simulator, prototyped in HTML first.
   - `config.js`: every number and all content (layers, eggs, dragons, prices). Shaped to port to Luau tables.
   - `game.js`: game logic and canvas rendering.
 - `tools/sim.js`: pacing sim that reads the same config. Run `node tools/sim.js 3` after changing numbers.
+- `AGENTS.md`: instructions for AI coding agents (`CLAUDE.md` points Claude Code to it).
