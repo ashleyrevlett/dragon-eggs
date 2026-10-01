@@ -31,7 +31,7 @@ const RAR = C.rarities;
 function newGame(keep) {
   const g = {
     v: 1, seed: (Math.random() * 2 ** 31) | 0,
-    gold: 0, gems: 0, mats: {}, pick: 0,
+    gold: 0, gems: 0, mats: {}, pick: 0, reinforce: 0,
     up: { strength: 0, swing: 0, eggLuck: 0, hatchSpeed: 0 },
     gemUp: { goldBoost: 0, petPower: 0, hatchLuck: 0, autoHatch: 0 },
     nests: [null], nestBought: 0, basket: [],
@@ -59,23 +59,33 @@ const layerOf = r => C.layers[layerIdx(Math.max(0, r))];
 const scaleAt = r => { const L = layerOf(r); return 1 + L.growth * Math.max(0, r - L.start); };
 const lvlCost = (u, l) => Math.ceil(u.base * Math.pow(u.growth, l));
 const strMult = () => Math.pow(C.upgrades.strength.per, S.up.strength);
-const rbMult = () => 1 + C.rebirth.dmgMultPer * S.rebirths;
+const RB = C.rebirth.ladder;
+const rbMult = () => S.rebirths ? RB[Math.min(S.rebirths, RB.length) - 1].mult : 1;
+const nextRebirth = () => RB[S.rebirths] || null;
+const rbUnlocks = u => RB.slice(0, S.rebirths).filter(r => r.unlock === u).length;
+const UNLOCK_NAMES = { autoDig: 'Auto Dig', equipSlot: '+1 dragon slot', autoHatch: 'Auto-Hatch', nest: '+1 nest' };
 const activeEvent = () => (EV.active && EV.active.ends > EV.t) ? EV.active : null;
 function goldMult() {
   const e = activeEvent();
-  return (1 + C.rebirth.goldMultPer * S.rebirths) * (1 + C.gemUpgrades.goldBoost.per * S.gemUp.goldBoost) * (S.passes.doubleGold ? 2 : 1) * (e && e.goldMult || 1);
+  return rbMult() * (1 + C.gemUpgrades.goldBoost.per * S.gemUp.goldBoost) * (S.passes.doubleGold ? 2 : 1) * (e && e.goldMult || 1);
 }
-const hitDamage = () => C.pickaxes[S.pick].dmg * strMult() * rbMult();
+const reinforceMult = () => Math.pow(C.reinforce.dmgMult, S.reinforce);
+const hitDamage = () => C.pickaxes[S.pick].dmg * reinforceMult() * strMult() * rbMult();
+function reinforceCost() {
+  if (S.reinforce >= C.reinforce.costFrac.length) return null;
+  const base = (C.pickaxes[S.pick + 1] || C.pickaxes[S.pick]).cost, f = C.reinforce.costFrac[S.reinforce] * (C.pickaxes[S.pick + 1] ? 1 : 4);
+  return Object.fromEntries(Object.entries(base).map(([k, v]) => [k, Math.ceil(v * f)]));
+}
 const swingRate = () => C.player.baseSwingsPerSec + C.upgrades.swing.per * S.up.swing;
 function petMult() { const e = activeEvent(); return strMult() * rbMult() * (1 + C.gemUpgrades.petPower.per * S.gemUp.petPower) * (e && e.petMult || 1); }
 const dragonDef = d => EGG[d.egg].dragons[d.i];
 const dragonPower = d => EGG[d.egg].power * RAR[d.i].power;
 const dragonSell = d => Math.ceil(EGG[d.egg].sell * RAR[d.i].sell * goldMult());
-const nestCap = () => C.incubators.start + S.nestBought + (S.passes.extraIncub ? 2 : 0);
-const equipCap = () => C.equip.start + S.equipBought + (S.rebirths >= 2 ? 1 : 0);
-const rebirthDepth = () => Math.min(C.rebirth.depthBase + C.rebirth.depthStep * S.rebirths, C.rebirth.depthCap);
-const autoDigUnlocked = () => S.rebirths >= 1 || !!S.passes.autoDigPass;
-const autoHatchOn = () => S.gemUp.autoHatch > 0 || S.rebirths >= 3;
+const nestCap = () => C.incubators.start + S.nestBought + (S.passes.extraIncub ? 2 : 0) + rbUnlocks('nest');
+const equipCap = () => C.equip.start + S.equipBought + rbUnlocks('equipSlot');
+const rebirthDepth = () => nextRebirth() ? nextRebirth().depth : Infinity;
+const autoDigUnlocked = () => rbUnlocks('autoDig') > 0 || !!S.passes.autoDigPass;
+const autoHatchOn = () => S.gemUp.autoHatch > 0 || rbUnlocks('autoHatch') > 0;
 const eggChance = () => C.eggs.base * (1 + C.upgrades.eggLuck.per * S.up.eggLuck);
 const hatchSpeedMult = () => 1 + C.upgrades.hatchSpeed.per * S.up.hatchSpeed;
 const equippedDragons = () => S.equipped.map(id => S.dragons.find(d => d.id === id)).filter(Boolean);
@@ -336,9 +346,14 @@ function buyGemUpgrade(k) {
 }
 function craftPick() {
   const p = C.pickaxes[S.pick + 1]; if (!p || !canAfford(p.cost)) return;
-  pay(p.cost); S.pick++; SFX.buy(); SFX.egg();
+  pay(p.cost); S.pick++; S.reinforce = 0; SFX.buy(); SFX.egg();
   banner(p.name + '!', 'x' + fmt(p.dmg / C.pickaxes[S.pick - 1].dmg) + ' dig damage', p.color);
   if (S.tut === 5) setTut(6);
+}
+function reinforcePick() {
+  const c = reinforceCost(); if (!c || !canAfford(c)) return;
+  pay(c); S.reinforce++; SFX.buy();
+  banner('Reinforced!', `${C.pickaxes[S.pick].name} x${fmt(reinforceMult())} damage`, C.pickaxes[S.pick].color);
 }
 function buyNest() {
   const c = C.incubators.buy[S.nestBought]; if (!c || !canAfford(c)) return;
@@ -370,9 +385,9 @@ function skipNest(i, how) {
 }
 
 function doRebirth() {
-  if (S.maxDepth < rebirthDepth()) return;
+  const next = nextRebirth(); if (!next || S.maxDepth < next.depth) return;
   const keep = {
-    gems: S.gems + C.rebirth.gemsBase + C.rebirth.gemsPer * (S.rebirths + 1),
+    gems: S.gems + next.gems,
     gemUp: S.gemUp, nests: S.nests, nestBought: S.nestBought, basket: S.basket, dragons: S.dragons, equipped: S.equipped,
     equipBought: S.equipBought, dex: S.dex, rebirths: S.rebirths + 1, bestDepth: Math.max(S.bestDepth, S.maxDepth),
     tut: 9, passes: S.passes, settings: S.settings, stats: S.stats, nextId: S.nextId, firstEggPlaced: true,
@@ -381,8 +396,8 @@ function doRebirth() {
   R.px = S.player.c; R.py = S.player.r; R.camY = S.player.r; R.path = []; R.target = null; R.lastLayer = 0;
   ensureRows(); syncPets(); buildNests(); closePanel();
   SFX.hatch(4);
-  const u = C.rebirth.unlocks[S.rebirths];
-  banner('Rebirth ' + S.rebirths + '!', `Gold and dig power x${fmt(1 + C.rebirth.goldMultPer * S.rebirths)}` + (u ? ' · Unlocked ' + ({ autoDig: 'Auto Dig', equipSlot: '+1 dragon slot', autoHatch: 'Auto-Hatch' }[u]) : ''), '#c77dff');
+  syncNestCount(); refillNests(); buildNests();
+  banner('Rebirth ' + S.rebirths + '!', `Gold and dig power x${fmt(next.mult)}` + (next.unlock ? ' · Unlocked ' + UNLOCK_NAMES[next.unlock] : ''), '#c77dff');
   save();
 }
 
@@ -401,6 +416,12 @@ function simulatePurchase(kind, id) {
 
 // ---------------------------------------------------------------- tutorial and goals
 function setTut(n) { if (n > S.tut) { S.tut = n; R.hintSig = null; } }
+function costChips(cost) {
+  return Object.entries(cost).map(([k, v]) => {
+    const have = k === 'gold' ? S.gold : (S.mats[k] || 0);
+    return `<span class="${have >= v ? 'ok' : ''}">${k === 'gold' ? 'Gold' : C.materials[k].name} ${fmt(Math.min(have, v))}/${fmt(v)}</span>`;
+  }).join('');
+}
 function goalHtml() {
   switch (S.tut) {
     case 0: return 'Tap the ground to dig. <b>Hold</b> to keep digging!';
@@ -412,15 +433,12 @@ function goalHtml() {
     const c = lvlCost(C.upgrades.strength, S.up.strength);
     return S.gold >= c ? 'Your dragon digs with you! Open the <b>Shop</b> and buy <b>Strength</b>.' : `Your dragon digs with you! Collect ${coinI} gold for an upgrade.`;
   }
+  const rc = reinforceCost();
+  if (rc) return `Reinforce your <b>${C.pickaxes[S.pick].name}</b> (${S.reinforce + 1}/${C.reinforce.costFrac.length}) for x${C.reinforce.dmgMult} damage<div class="need">${costChips(rc)}</div>`;
   const next = C.pickaxes[S.pick + 1];
   const nextLayer = C.layers.find(l => l.start > S.maxDepth);
-  if (next && nextLayer && nextLayer.sealTier > S.pick) {
-    const chips = Object.entries(next.cost).map(([k, v]) => {
-      const have = k === 'gold' ? S.gold : (S.mats[k] || 0);
-      return `<span class="${have >= v ? 'ok' : ''}">${k === 'gold' ? 'Gold' : C.materials[k].name} ${fmt(Math.min(have, v))}/${fmt(v)}</span>`;
-    }).join('');
-    return `Craft the <b>${next.name}</b> to break into ${nextLayer.name}<div class="need">${chips}</div>`;
-  }
+  if (next && nextLayer && nextLayer.sealTier > S.pick) return `Craft the <b>${next.name}</b> to break into ${nextLayer.name}<div class="need">${costChips(next.cost)}</div>`;
+  if (!nextRebirth()) return 'You climbed the whole rebirth ladder! <b>More rebirths arrive with updates.</b>';
   if (S.maxDepth >= rebirthDepth()) return '<b>Rebirth is ready!</b> Open Rebirth for a permanent boost.';
   return `Dig to <b>${rebirthDepth()} m</b> to unlock Rebirth`;
 }
@@ -432,7 +450,10 @@ function resize() {
   const r = $('mineWrap').getBoundingClientRect();
   DPR = Math.min(window.devicePixelRatio || 1, 2);
   VW = r.width; VH = r.height; cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR);
-  CS = Math.floor(Math.min(VW / (COLS + 1.2), VH / 7.2, 84));
+  // Blocks are tap targets: keep them at least 48px by showing fewer rows on short screens,
+  // and trim the side walls in portrait where width is the limit.
+  const portrait = VH > VW;
+  CS = Math.floor(Math.min(VW / (COLS + (portrait ? 0.6 : 1.2)), Math.max(VH / 7.2, 48), 84));
   X0 = Math.round((VW - COLS * CS) / 2);
   document.documentElement.style.setProperty('--hud-h', $('hud').getBoundingClientRect().height + 'px');
 }
@@ -454,6 +475,7 @@ cv.addEventListener('pointerdown', e => {
     const B = bfs(); if (B.dist.has(B.key(r, c))) { R.path = pathTo([r, c], B); R.target = null; }
   }
 });
+cv.addEventListener('contextmenu', e => e.preventDefault()); // long-press is hold-to-dig, not a menu
 const release = () => { R.holding = false; };
 cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); cv.addEventListener('pointerleave', release);
 window.addEventListener('keydown', e => {
@@ -915,6 +937,9 @@ function drawNavIcons() {
 let panel = null, panelSig = '';
 function openPanel(name) { panel = name; panelSig = ''; $('sheet').classList.add('open'); renderPanel(); if (S.tut === 4 && name === 'shop') R.hintSig = null; }
 function closePanel() { panel = null; $('sheet').classList.remove('open'); }
+function shopChips(cost) {
+  return Object.entries(cost).map(([k, v]) => { const have = k === 'gold' ? S.gold : (S.mats[k] || 0); return `<span class="chip ${have >= v ? 'ok' : 'no'}">${k === 'gold' ? coinI.replace('coin"', 'coin" style="width:12px;height:12px"') : matI(k)}${fmt(Math.min(have, v))}/${fmt(v)}</span>`; }).join('');
+}
 function costBtn(cost, action, label) {
   const ok = canAfford(cost);
   const parts = Object.entries(cost).map(([k, v]) => k === 'gold' ? coinI + fmt(v) : k === 'gems' ? gemI + fmt(v) : matI(k) + fmt(v)).join(' ');
@@ -925,14 +950,16 @@ function dragonCard(d, extra = '') {
   return `<div class="dcard ${eq ? 'eq' : ''} ${R.selDragon === d.id ? 'sel' : ''}" data-a="sel:${d.id}" style="border-color:${eq ? '' : r.color + '55'}">
     <canvas width="128" height="128" data-dragon="${d.egg}:${d.i}"></canvas>
     <div class="nm">${def.name}</div><div class="rar" style="color:${r.color}">${r.name}</div><div class="pw">Power ${fmt(dragonPower(d) * petMult())}/s</div>
-    ${R.selDragon === d.id ? `<div class="dactions"><button class="btn ${eq ? 'alt' : ''}" data-a="eq:${d.id}">${eq ? 'Unequip' : 'Equip'}</button><button class="btn danger" data-a="sell:${d.id}">Sell ${fmt(dragonSell(d))}</button></div>` : ''}${extra}</div>`;
+    ${R.selDragon === d.id ? `<div class="dactions"><button class="btn ${eq ? 'alt' : ''}" data-a="eq:${d.id}">${eq ? 'Unequip' : 'Equip'}</button><button class="btn danger" data-a="${d.i >= 2 && R.sellConfirm !== d.id ? 'sellask' : 'sell'}:${d.id}">${R.sellConfirm === d.id ? 'Tap again to sell' : 'Sell ' + fmt(dragonSell(d))}</button></div>` : ''}${extra}</div>`;
 }
 function panelHtml() {
   if (panel === 'shop') {
     const next = C.pickaxes[S.pick + 1], cur = C.pickaxes[S.pick];
-    let h = `<div class="sec"><h4>Pickaxe</h4><div class="row"><canvas width="96" height="96" data-pick="${S.pick}" style="width:44px;height:44px"></canvas><div class="grow"><div class="nm">${cur.name}</div><div class="ds">${fmt(hitDamage())} damage per hit · ${swingRate().toFixed(1)} swings/s</div></div></div>`;
+    let h = `<div class="sec"><h4>Pickaxe</h4><div class="row"><canvas width="96" height="96" data-pick="${S.pick}" style="width:44px;height:44px"></canvas><div class="grow"><div class="nm">${cur.name}</div><div class="ds">${S.reinforce ? `Reinforced ${S.reinforce}/${C.reinforce.costFrac.length} · ` : ''}${fmt(hitDamage())} damage per hit · ${swingRate().toFixed(1)} swings/s</div></div></div>`;
+    const rc = reinforceCost();
+    if (rc) h += `<div class="row"><div class="grow"><div class="nm">Reinforce ${S.reinforce + 1}/${C.reinforce.costFrac.length} <span class="lv">x${C.reinforce.dmgMult} damage</span></div><div class="ds">Strengthen your ${cur.name} before the next one</div><div class="chips">${shopChips(rc)}</div></div><button class="btn alt" data-a="reinforce" ${canAfford(rc) ? '' : 'disabled'}>Reinforce</button></div>`;
     if (next) {
-      const chips = Object.entries(next.cost).map(([k, v]) => { const have = k === 'gold' ? S.gold : (S.mats[k] || 0); return `<span class="chip ${have >= v ? 'ok' : 'no'}">${k === 'gold' ? coinI.replace('coin"', 'coin" style="width:12px;height:12px"') : matI(k)}${fmt(Math.min(have, v))}/${fmt(v)}</span>`; }).join('');
+      const chips = shopChips(next.cost);
       h += `<div class="row"><canvas width="96" height="96" data-pick="${S.pick + 1}" style="width:44px;height:44px"></canvas><div class="grow"><div class="nm">${next.name} <span class="lv">x${fmt(next.dmg / cur.dmg)} damage</span></div><div class="ds">Breaks the ${C.layers[S.pick + 1] ? C.layers[S.pick + 1].name : 'deepest'} seal</div><div class="chips">${chips}</div></div><button class="btn alt" data-a="craft" ${canAfford(next.cost) ? '' : 'disabled'}>Craft</button></div>`;
     }
     h += `</div><div class="sec"><h4>Upgrades</h4>`;
@@ -978,16 +1005,16 @@ function panelHtml() {
     return h + '</div>';
   }
   if (panel === 'rebirth') {
-    const need = rebirthDepth(), ok = S.maxDepth >= need, nr = S.rebirths + 1;
-    const u = C.rebirth.unlocks[nr];
-    let h = `<div class="sec"><h4>Rebirth ${nr}</h4><div class="sub">Deepest this run: ${S.maxDepth} m of ${need} m</div><div class="bigbar"><i style="width:${clamp(S.maxDepth / need, 0, 1) * 100}%"></i></div></div>`;
+    const next = nextRebirth();
+    if (!next) return `<div class="sec"><h4>Rebirth ${S.rebirths}</h4><div class="sub">You reached the top of the rebirth ladder: gold and dig power x${fmt(rbMult())}. More rebirths arrive with updates.</div></div>`;
+    const need = next.depth, ok = S.maxDepth >= need, nr = S.rebirths + 1;
+    let h = `<div class="sec"><h4>Rebirth ${nr} of ${RB.length}</h4><div class="sub">Deepest this run: ${S.maxDepth} m of ${need} m</div><div class="bigbar"><i style="width:${clamp(S.maxDepth / need, 0, 1) * 100}%"></i></div></div>`;
     h += `<div class="sec"><h4>You get, forever</h4>
-      <div class="row"><div class="grow"><div class="nm">Gold x${fmt(1 + C.rebirth.goldMultPer * S.rebirths)} → x${fmt(1 + C.rebirth.goldMultPer * nr)}</div></div></div>
-      <div class="row"><div class="grow"><div class="nm">Dig power x${fmt(1 + C.rebirth.dmgMultPer * S.rebirths)} → x${fmt(1 + C.rebirth.dmgMultPer * nr)}</div><div class="ds">You and your dragons</div></div></div>
-      <div class="row"><div class="grow"><div class="nm">${gemI} +${C.rebirth.gemsBase + C.rebirth.gemsPer * nr} gems</div></div></div>
-      ${u ? `<div class="row"><div class="grow"><div class="nm">Unlocks ${{ autoDig: 'Auto Dig', equipSlot: 'one more dragon slot', autoHatch: 'Auto-Hatch' }[u]}</div></div></div>` : ''}</div>`;
+      <div class="row"><div class="grow"><div class="nm">Gold and dig power x${fmt(rbMult())} → x${fmt(next.mult)}</div><div class="ds">You and your dragons</div></div></div>
+      <div class="row"><div class="grow"><div class="nm">${gemI} +${next.gems} gems</div></div></div>
+      ${next.unlock ? `<div class="row"><div class="grow"><div class="nm">Unlocks ${UNLOCK_NAMES[next.unlock]}</div></div></div>` : ''}</div>`;
     h += `<div class="sec"><h4>What happens</h4><div class="lists"><ul><li>Gold</li><li>Materials</li><li>Pickaxe</li><li>Gold upgrades</li><li>Depth (new ground)</li></ul><ul><li>Dragons</li><li>Eggs and nests</li><li>Gems and gem upgrades</li><li>Dragondex</li><li>Robux purchases</li></ul></div><div class="note" style="margin-top:4px">Left: starts over. Right: you keep.</div></div>`;
-    h += `<div class="sec">${ok ? `<button class="btn" style="width:100%;justify-content:center;font-size:18px;padding:12px" data-a="${R.rbConfirm ? 'rebirth' : 'rbask'}">${R.rbConfirm ? 'Tap again to rebirth' : 'Rebirth now'}</button>` : `<div class="note">Dig to ${need} m to rebirth.</div>`}</div>`;
+    h += `<div class="sec">${ok ? `<button class="btn" style="width:100%;justify-content:center;font-size:18px;padding:12px" data-a="${R.rbConfirm ? 'rebirth' : 'rbask'}">${R.rbConfirm ? 'Tap again to rebirth' : `Rebirth for x${fmt(next.mult)}`}</button>` : `<div class="note">Dig to ${need} m to rebirth.</div>`}</div>`;
     return h;
   }
   if (panel === 'settings') {
@@ -1019,8 +1046,10 @@ $('sheetBody').addEventListener('click', e => {
   const [a, v] = el.dataset.a.split(':');
   if (a !== 'rbask' && a !== 'rebirth') R.rbConfirm = false;
   if (a !== 'resetask' && a !== 'reset') R.resetConfirm = false;
+  if (a !== 'sellask' && a !== 'sell') R.sellConfirm = null;
   switch (a) {
     case 'craft': craftPick(); break;
+    case 'reinforce': reinforcePick(); break;
     case 'up': buyUpgrade(v); break;
     case 'gup': buyGemUpgrade(v); break;
     case 'nest': buyNest(); break;
@@ -1030,7 +1059,8 @@ $('sheetBody').addEventListener('click', e => {
     case 'prod': simulatePurchase('prod', v); break;
     case 'sel': R.selDragon = R.selDragon === +v ? null : +v; break;
     case 'eq': toggleEquip(+v); break;
-    case 'sell': sellDragon(+v); R.selDragon = null; break;
+    case 'sellask': R.sellConfirm = +v; break;
+    case 'sell': sellDragon(+v); R.selDragon = null; R.sellConfirm = null; break;
     case 'best': equipBest(); break;
     case 'sellcommon': S.dragons.filter(d => d.i === 0 && !S.equipped.includes(d.id)).forEach(d => sellDragon(d.id, true)); SFX.coin(); break;
     case 'asc': S.settings.autoSellCommon = v === '1'; break;
@@ -1080,6 +1110,7 @@ $('reveal').addEventListener('click', e => {
   if (!R.reveal.shown) { showRevealInfo(); return; }
   if (!b) return;
   const d = R.reveal.d;
+  if (b.dataset.r === 'sell' && d.i >= 2 && !R.reveal.sellAsk) { R.reveal.sellAsk = true; b.textContent = 'Tap again to sell'; return; }
   if (b.dataset.r === 'sell') sellDragon(d.id);
   if (b.dataset.r === 'swap') toggleEquip(d.id);
   save(); nextReveal();

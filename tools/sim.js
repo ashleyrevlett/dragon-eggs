@@ -2,10 +2,12 @@
 // Models a greedy player who holds dig, detours to ~2.5 blocks per meter, keeps the best dragons
 // and sells the rest, and buys the cheapest useful upgrade. Approximate by design: use it to
 // spot pacing cliffs, then confirm by playing the prototype.
-// Usage: node tools/sim.js [rebirths=3]
+// Usage: node tools/sim.js [rebirths=3]  (stops early at the end of the rebirth ladder)
 const C = require('../prototype/config.js');
 
 const RUNS = Number(process.argv[2] || 3);
+const RB = C.rebirth.ladder;
+const rbUnlocks = (n, u) => RB.slice(0, n).filter(r => r.unlock === u).length;
 const BLOCKS_PER_METER = 2.5;
 const MOVE_OVERHEAD = 0.12;       // seconds per block spent walking/falling
 const TAP_EFFICIENCY = 0.85;      // fraction of max swing rate a player actually sustains
@@ -28,10 +30,11 @@ const rng = mulberry(42);
 const meta = { rebirths: 0, dragons: [], gems: 0, incubators: C.incubators.start, t: 0 };
 
 for (let run = 0; run <= RUNS; run++) {
-  const s = { d: 0, gold: 0, mats: {}, pick: 0, up: { strength: 0, swing: 0, eggLuck: 0, hatchSpeed: 0 }, eggs: [], incub: [], incubBought: meta.incubators - C.incubators.start };
-  const rbMult = 1 + C.rebirth.dmgMultPer * meta.rebirths;
-  const goldMult = 1 + C.rebirth.goldMultPer * meta.rebirths;
-  const target = Math.min(C.rebirth.depthBase + C.rebirth.depthStep * meta.rebirths, C.rebirth.depthCap);
+  const s = { d: 0, gold: 0, mats: {}, pick: 0, reinforce: 0, up: { strength: 0, swing: 0, eggLuck: 0, hatchSpeed: 0 }, eggs: [], incub: [], incubBought: meta.incubators - C.incubators.start };
+  if (!RB[meta.rebirths]) break;
+  const rbMult = meta.rebirths ? RB[meta.rebirths - 1].mult : 1;
+  const goldMult = rbMult;
+  const target = RB[meta.rebirths].depth;
   const log = [];
   let blocksSinceEgg = 0, firstEgg = run === 0, t0 = meta.t, lastLayer = -1;
   const milestone = (msg) => log.push(`  ${mmss(meta.t - t0).padStart(7)}  ${msg}`);
@@ -51,8 +54,8 @@ for (let run = 0; run <= RUNS; run++) {
     const avgHpMult = (w.base * 1 + (wt - w.base - w.gold - w.gem) * C.blockKinds.vein.hpMult + w.gold * C.blockKinds.gold.hpMult + w.gem * C.blockKinds.gem.hpMult) / wt;
     const hp = L.hp * scale * avgHpMult;
     const swings = (C.player.baseSwingsPerSec + s.up.swing * C.upgrades.swing.per) * TAP_EFFICIENCY;
-    const playerDps = C.pickaxes[s.pick].dmg * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult * swings;
-    const equipped = meta.dragons.slice().sort((a, b) => b.power - a.power).slice(0, C.equip.start + (meta.rebirths >= 2 ? 1 : 0));
+    const playerDps = C.pickaxes[s.pick].dmg * Math.pow(C.reinforce.dmgMult, s.reinforce) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult * swings;
+    const equipped = meta.dragons.slice().sort((a, b) => b.power - a.power).slice(0, C.equip.start + rbUnlocks(meta.rebirths, 'equipSlot'));
     const petDps = equipped.reduce((a, d) => a + d.power, 0) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult;
     const dps = playerDps + petDps;
     const dt = Math.max(1 / swings, hp / dps) + MOVE_OVERHEAD;
@@ -87,11 +90,20 @@ for (let run = 0; run <= RUNS; run++) {
     }
     s.eggs = s.eggs.slice(0, C.eggs.basketCap);
 
-    // Shopping: next pick first, then the cheapest useful gold purchase.
+    // Shopping: reinforce, then the next pick, then the cheapest useful gold purchase.
+    const rf = C.reinforce.costFrac[s.reinforce];
+    if (rf !== undefined) {
+      const base = (C.pickaxes[s.pick + 1] || C.pickaxes[s.pick]).cost, f = rf * (C.pickaxes[s.pick + 1] ? 1 : 4);
+      const rc = Object.fromEntries(Object.entries(base).map(([k, v]) => [k, Math.ceil(v * f)]));
+      if (Object.entries(rc).every(([k, v]) => (k === 'gold' ? s.gold : (s.mats[k] || 0)) >= v)) {
+        for (const [k, v] of Object.entries(rc)) { if (k === 'gold') s.gold -= v; else s.mats[k] -= v; }
+        s.reinforce++; milestone(`reinforce ${C.pickaxes[s.pick].name} ${s.reinforce}`);
+      }
+    }
     const np = C.pickaxes[s.pick + 1];
     if (np && Object.entries(np.cost).every(([k, v]) => (k === 'gold' ? s.gold : (s.mats[k] || 0)) >= v)) {
       for (const [k, v] of Object.entries(np.cost)) { if (k === 'gold') s.gold -= v; else s.mats[k] -= v; }
-      s.pick++; milestone(`craft ${np.name}`);
+      s.pick++; s.reinforce = 0; milestone(`craft ${np.name}`);
     }
     const options = [];
     for (const [k, u] of Object.entries(C.upgrades)) if (s.up[k] < u.max) options.push({ cost: lvlCost(u, s.up[k]), buy: () => s.up[k]++, name: k });
@@ -113,5 +125,6 @@ for (let run = 0; run <= RUNS; run++) {
   console.log(`Run ${run + 1} (rebirths so far: ${meta.rebirths}, total time ${mmss(meta.t)})`);
   console.log(log.join('\n'));
   meta.rebirths++;
-  meta.gems += C.rebirth.gemsBase + C.rebirth.gemsPer * meta.rebirths;
+  meta.gems += RB[meta.rebirths - 1].gems;
+  meta.incubators += RB[meta.rebirths - 1].unlock === 'nest' ? 1 : 0;
 }

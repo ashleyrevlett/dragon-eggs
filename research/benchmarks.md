@@ -8,6 +8,8 @@ The four benchmarks follow one template. A single hold-and-release or walk-on ac
 - a mutation/Golden layer and silhouette Dragondex at soft launch;
 - codes and a weekly numbered update cadence from day one, which is when Roblox's June 2026 discovery changes start scoring 28-day retention and co-play.
 
+> **Update (owner confirmed):** the benchmarks are **⛳ Hit a Golf Ball by Tiny Loop** and **Collect Planets by RockyStar Studios**, not the alternatives (Golf Training!, Mine a Planet) discussed below. The rebirth ladder, mid-layer pacing and roadmap recommendations have been adopted in `DESIGN.md`; offline digging stays out until live ops (M3). The store recommendations are still proposals.
+
 > **Read this before relying on any number.** Every researcher was blocked from fetching pages directly (roblox.com, Rolimons, RoMonitor, DevForum, fan wikis and press sites all returned egress errors). **Every finding below comes from search-engine result snippets and summaries, not full page reads.** Many sources are unofficial SEO fan wikis that contradict each other. Most metrics are undated snapshots, and several conflict (Chicken Farm visits appear as 16.8M, 56.2M and 113.3M). **The identities of "Hit a Golf Ball" and "Collect Planets" are uncertain** and need confirming by the user. No source gives timed first-session milestones for any of the four games, so every pacing comparison is inferred from loop descriptions. Confidence is marked throughout, and a hand-verification checklist is near the end. All design lessons are **recommendations, not decisions**.
 
 ## Two benchmarks are confirmed hits, two are uncertain matches

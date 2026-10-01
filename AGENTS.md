@@ -17,6 +17,7 @@ The game's single job is to make **digging, discovering an egg, hatching a cute 
 | `prototype/config.js` | **Every number and all content**: layers, block kinds, materials, pickaxes, upgrades, eggs, dragons, rarities, nests, rebirth, events, premium catalogue. |
 | `prototype/game.js` | Game logic, input, canvas rendering, UI panels. One IIFE, no modules. |
 | `tools/sim.js` | Pacing sim. Reads `config.js` and prints a timeline of milestones per rebirth run. |
+| `research/` | Benchmark research on comparable Roblox games (`benchmarks.md`) and its raw notes. |
 
 ## Running
 
@@ -34,7 +35,7 @@ The game's single job is to make **digging, discovering an egg, hatching a cute 
 
 ### Balance
 - Put numbers and content in `config.js`, never hard-coded in `game.js`. The one exception is pure presentation, such as particle counts or animation timing.
-- After any balance change, run `node tools/sim.js 3` and check the pacing targets in `DESIGN.md` sections 2 and 3.4. Current targets: first egg under 20 s, first hatch under 45 s, first upgrade under 90 s, second layer at 2–4 min, first rebirth at about 25 min in the sim (about 40–50 min for a real player).
+- After any balance change, run `node tools/sim.js 7` (the whole rebirth ladder) and check the pacing targets in `DESIGN.md` sections 2 and 3.4. Current targets: first egg under 20 s, first hatch under 45 s, first upgrade under 90 s, second layer at 2–4 min, no stretch over about 5 min without a milestone, first rebirth at about 30 min in the sim (about 45–60 min for a real player), later runs 10–15 min each in the sim.
 - The sim is a greedy, optimistic player. Treat it as a cliff detector, not a prediction.
 - If you add a mechanic that affects pacing, model it in `tools/sim.js` too.
 
@@ -51,11 +52,12 @@ The game's single job is to make **digging, discovering an egg, hatching a cute 
 - Match the existing style: 2-space indent, single quotes, semicolons, short helper functions, comments only where the reason isn't obvious.
 - Dragons, eggs and pickaxes are drawn procedurally (`drawDragon`, `drawEgg`, `drawPick`). Add new looks there instead of adding image files.
 - Landscape is the primary layout (Roblox mobile is landscape). Portrait must still work. Check both.
+- Follow the touch rules in `DESIGN.md` section 1: every tap target at least 44px, dig blocks at least 48px, two taps to sell anything Rare or better. Check at phone sizes (for example 667x375 and 375x667) when you change UI.
 
 ### Scope
 - Keep dragons mechanically simple: one stat (Power). Don't add creature combat, breeding, farming, trading or elaborate crafting. The brief rules these out.
 - Keep moment-to-moment controls simple (tap and hold). Put complexity in progression choices.
-- Robux purchases in the prototype only simulate the purchase. Never sell eggs or random dragons directly for Robux without showing odds first (Roblox paid random items policy).
+- Robux purchases in the prototype only simulate the purchase. Store changes suggested by the benchmark research (`DESIGN.md` section 6) are still Proposed: don't change the premium catalogue in `config.js` unless the owner agrees. Never sell eggs or random dragons directly for Robux without showing odds first (Roblox paid random items policy).
 
 ## Checking a change
 

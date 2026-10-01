@@ -78,6 +78,11 @@
       { name: 'Starfall Pick', dmg: 860000, color: '#ffd76a', cost: { gold: 5.6e9,   stardust: 40, frost: 60 } },
     ],
 
+    // Reinforce: mid-layer goals between pickaxes, so no stretch of a layer goes without a target.
+    // Each pickaxe can be reinforced twice for x1.5 damage each. A level costs costFrac x the next
+    // pickaxe's recipe (gold and materials), so it uses what the current layer drops. Resets on a new pickaxe.
+    reinforce: { dmgMult: 1.5, costFrac: [0.25, 0.5] },
+
     // Gold upgrades. cost(level) = base * growth^level. All reset on rebirth.
     upgrades: {
       strength:   { name: 'Strength',    desc: 'Dig damage x1.12 (you and dragons)',     base: 12,  growth: 1.38, max: 200, per: 1.12 },
@@ -174,14 +179,20 @@
       robux: [ { maxSec: 60, price: 5 }, { maxSec: 600, price: 15 }, { maxSec: 1800, price: 35 }, { maxSec: Infinity, price: 75 } ],
     },
 
+    // Rebirth ladder, Chicken Farm style: steep geometric multipliers, one row per rebirth.
+    // The ladder is content: updates add rows. Past the last row, Rebirth shows "more in the next update".
+    // mult applies to gold and to dig power (you and dragons). unlock: one-off reward at that rebirth.
     rebirth: {
-      depthBase: 150,        // first rebirth unlocks at 150 m (inside Glowshroom Hollow)
-      depthStep: 50,         // each later rebirth needs 50 m more
-      depthCap: 450,
-      goldMultPer: 0.5,      // permanent: gold x(1 + 0.5 * rebirths)
-      dmgMultPer: 0.5,       // permanent: dig damage and dragon power x(1 + 0.5 * rebirths)
-      gemsBase: 15, gemsPer: 5,
-      unlocks: { 1: 'autoDig', 2: 'equipSlot', 3: 'autoHatch' },
+      ladder: [
+        { depth: 150, mult: 2, gems: 20,  unlock: 'autoDig' },
+        { depth: 200, mult: 5, gems: 25,  unlock: 'equipSlot' },
+        { depth: 250, mult: 12, gems: 30,  unlock: 'autoHatch' },
+        { depth: 300, mult: 30, gems: 40 },
+        { depth: 350, mult: 75, gems: 50,  unlock: 'nest' },
+        { depth: 400, mult: 200, gems: 60 },
+        { depth: 450, mult: 500, gems: 75,  unlock: 'equipSlot' },
+        { depth: 500, mult: 1300, gems: 100 },
+      ],
     },
 
     // Gem upgrades persist through rebirth.

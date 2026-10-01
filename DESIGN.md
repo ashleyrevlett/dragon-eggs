@@ -50,6 +50,17 @@ These shape everything else.
 - **Feedback on every hit:** damage number, crack stage, chip particles, hit sound. Crits (10% chance, x2) add variance. A break adds a screen-shake tick, a coin pop and a material pop.
 - **Discovery hint:** blocks more than 6 rows below the player show a sparkle instead of their contents, so there is always "something down there" to dig toward. The scripted first egg is always visible.
 
+### Touch and mobile rules **[Agreed: mobile usability pass]**
+
+Checked at iPhone SE and iPhone 15 sizes, in landscape and portrait.
+
+- **Every tap target is at least 44px** (Apple's minimum; Roblox's mobile guidance is similar). That covers HUD icons, close buttons, every Shop and Dragons button, and segmented toggles.
+- **Dig blocks are at least 48px.** On short screens the shaft shows fewer rows instead of shrinking blocks, and in portrait the side walls get thinner to keep 7 columns at full size.
+- **Long-press is hold-to-dig.** It never opens a context menu, text selection or the iOS callout, and controls don't wait on double-tap zoom.
+- **The goal pill stays compact:** one line of text plus a row of chips, with smaller type on short screens, so it never covers the player.
+- **Selling a Rare or better dragon takes two taps** ("Tap again to sell"), both in the Dragons menu and on the hatch reveal. Bigger buttons sit closer together, and kids mis-tap.
+- **In Roblox:** keep to the platform safe area (`GuiService:GetGuiInset`, ScreenGui `SafeAreaCompatibility`), keep the bottom-right thumb zone clear, and test on a real low-end Android phone.
+
 ### Screen layout (landscape first, as Roblox mobile is)
 
 ```
@@ -84,7 +95,8 @@ Target: **first egg under 20 s, first hatch under 45 s, first upgrade under 90 s
 | 0:30 | **First helper.** Puffbloom flies down and chews on blocks next to you. Pink damage numbers make its contribution visible. | It is auto-equipped into an empty slot. |
 | ~0:45 | **First purchase.** "Buy Strength in the Shop" and the Shop button pulses. Strength costs 12 gold. | Strength makes you **and** your dragons hit harder, which ties the two together. |
 | 1–2 min | More eggs (about every 6–7 m, with a pity guarantee). A second egg has to wait for the nest, which shows the "2 eggs waiting" pressure that sells nest 2 (120 gold). First sell-or-keep choice. | |
-| ~1:45 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 200, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
+| ~1:15 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:40. | Small crafted goals before the big one. |
+| ~2:10 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 200, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
 | 2–4 min | **Pebble Caverns.** Layer banner: "New egg: Pebble Egg". Blocks are visibly tougher, and Pebble dragons are 6x stronger than Meadow ones. | Shows that deeper means better eggs. |
 
 By the end of the first session (about 25–45 min) a player has crafted the Iron Pick, reached the Crystal Grotto, owns 2–3 nests and 3 equipped dragons, and can see the Rebirth button glowing ahead at 150 m.
@@ -131,6 +143,8 @@ Equipment is deliberately small: **one pickaxe** (crafted tiers) plus **four gol
 | Egg Sense | +12% egg chance in new ground | 40 x 1.8^level (max 15) |
 | Warm Nests | eggs hatch 10% faster | 60 x 2^level (max 10) |
 
+**Reinforce [Agreed]:** each pickaxe can be reinforced twice for x1.5 damage each, so every layer has goals between seals. A level costs 25% and then 50% of the next pickaxe's recipe (gold plus that layer's materials). Reinforce levels reset when you craft the next pickaxe. The goal pill runs Reinforce 1, then Reinforce 2, then the next pickaxe. This was added because the sim showed an 8-minute stretch in Pebble Caverns with nothing to aim for; that gap is now about 5 minutes, which eggs and Strength purchases fill.
+
 Strength is the "always something to buy" upgrade, and its exponential cost against exponential income is what produces ridiculous numbers. Numbers display with suffixes (K, M, B, T, Qa, Qi, …).
 
 **[Open]** Do we want cosmetic pickaxe skins (Robux or event rewards)? They are cheap to build and kids love them, but they are out of MVP.
@@ -165,14 +179,14 @@ Strength is the "always something to buy" upgrade, and its exponential cost agai
 Each egg has 5 named dragons, one per rarity (Meadow: Sprig, Puffbloom, Mossy, Clover, Sunpetal; full list in the config). Odds are always shown in-game. That is good practice and a Roblox requirement if anything random is ever sold for Robux.
 
 **Hatching**
-- **Nests** (incubators): 1 to start. Buy nest 2 for 120 gold and nest 3 for 2.5K gold, then nests 4–6 for gems (25, 60, 140). A Robux pass adds +2.
+- **Nests** (incubators): 1 to start. Buy nest 2 for 120 gold and nest 3 for 2.5K gold, then nests 4–6 for gems (25, 60, 140). Rebirth 5 adds one more, and a Robux pass adds +2.
 - Eggs auto-fill free nests. Extras wait in an **egg basket** (12 max). Beyond that, an egg sells for 30% of its value with a "basket full" message.
 - **Timers run on real time and keep going while you're offline.** Coming back to a nest of ready eggs is the return hook.
 - **What hatching upgrades improve:** Warm Nests (speed), nest count, Lucky Nests (a gem upgrade that makes rarer dragons more likely), Auto-Hatch (gem unlock or rebirth 3).
 - **Skip:** gems (1 gem per 30 s remaining) or Robux, priced by time bracket (5 / 15 / 35 / 75 R$).
 
 **Helpers**
-- **Equipped slots:** 3 to start, 4th at rebirth 2, up to 3 more for gems. **[Open]** Should we also sell a +slot gamepass?
+- **Equipped slots:** 3 to start, +1 at rebirth 2 and +1 at rebirth 7, up to 3 more for gems. **[Open]** Should we also sell a +slot gamepass?
 - **Power = damage per second.** Each equipped dragon flies to an exposed block near you and chews on it. Pink damage numbers show what it's doing.
 - Pet damage = Power x Strength multiplier x rebirth multiplier x gem upgrades x events. A Common from a layer's egg starts at about 30% of the player's own damage per second in that layer. A Legendary roughly triples it. Three good dragons out-dig the player, which is what makes Auto Dig (below) feel earned.
 
@@ -181,14 +195,27 @@ Each egg has 5 named dragons, one per rarity (Meadow: Sprig, Puffbloom, Mossy, C
 - Dragon storage: 40, with mass actions ("Equip best", "Sell all unequipped Commons", and auto-sell Commons when Auto-Hatch is on).
 - Duplicates are fine. Every hatch also fills in the **Dragondex**. **[Proposed for later]** "Merge 5 duplicates into a Golden version (x2.5 power)" is the most common pet-sim duplicate sink, and it stays within "no breeding" because it's a one-button upgrade.
 
-### 3.4 Rebirth **[Agreed: rebirth exists] [Proposed: rules]**
+### 3.4 Rebirth **[Agreed]**
 
-- Unlocks on reaching **150 m** (inside Glowshroom Hollow). Each later rebirth needs **+50 m**, capped at 450 m.
-- Each rebirth gives, permanently: **gold x(1 + 0.5 x rebirths)**, **dig power x(1 + 0.5 x rebirths)** for you and your dragons, and **15 + 5 x rebirth number gems**.
-- Milestone unlocks: rebirth 1 gives **Auto Dig**, rebirth 2 gives **+1 dragon slot**, rebirth 3 gives **Auto-Hatch**.
-- Every run regenerates the world from a new seed.
+Rebirth is a ladder, Chicken Farm style. Multipliers are steep and geometric, and the ladder is content: updates add rungs instead of new systems.
 
-Sim pacing (greedy player): rebirth 1 at about 25 min, rebirth 2 about 17 min later, rebirth 3 about 12 min after that. Expect real players to take about 1.5–2x longer, so the first rebirth lands in roughly a first or second session. **[Open]** The sim shows a dead stretch of about 8 minutes in Pebble Caverns with no milestone. Playtests should check whether eggs and Strength buys fill it, or whether it needs a mid-layer goal such as a "vein rush" pocket.
+| Rebirth | Reach | Gold and dig power | Gems | Unlocks |
+|---|---|---|---|---|
+| 1 | 150 m | x2 | 20 | Auto Dig |
+| 2 | 200 m | x5 | 25 | +1 dragon slot |
+| 3 | 250 m | x12 | 30 | Auto-Hatch |
+| 4 | 300 m | x30 | 40 | |
+| 5 | 350 m | x75 | 50 | +1 nest |
+| 6 | 400 m | x200 | 60 | |
+| 7 | 450 m | x500 | 75 | +1 dragon slot |
+| 8 | 500 m | x1,300 | 100 | |
+
+- The multiplier applies to gold and to dig power, for you and your dragons. It replaces the previous one, it doesn't stack.
+- The Rebirth button shows exactly what you'll get ("Rebirth for x5").
+- Past the last rung, the Rebirth menu says more rebirths arrive with updates. Plan about one new rung per update or two.
+- Every run regenerates the world from a new seed. What resets and what persists is in section 5.
+
+Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 29 min, then 15, 10, 12, 12, 13, 14 and 15 min per run, about 2 hours for all 8. Each run reaches a deeper layer, so later runs repeat faster but go further. Expect real players to take about 1.5–2x longer: first rebirth in roughly the first hour, the full ladder over several days of play.
 
 ---
 
@@ -235,7 +262,7 @@ Why keep the eggs: losing an unhatched Legendary-chance egg feels bad to kids, a
 | Auto-equip into an empty slot | Start | |
 | **Auto Dig** | Rebirth 1, or the Auto Dig gamepass | The character picks targets, preferring eggs, then gems, then gold, then down. It digs at the normal swing rate, so it never beats active play. |
 | **Auto-Hatch** | Rebirth 3, or 40 gems | Ready eggs hatch with a toast instead of the reveal. Optional auto-sell for Commons. |
-| Offline digging | Later | Equipped dragons dig at 10% while you're away, up to 2 h, collected on return. |
+| Offline digging | Later (M3), **not at soft launch [Agreed]** | Equipped dragons dig at a reduced rate while you're away and you collect on return. The benchmarks (Collect Planets) suggest a cap near 24 h. Hatch timers already run offline, so ready eggs are the return hook until then. |
 
 ### Server events **[Agreed: real-time, buffs or brief minigames] [Proposed: designs]**
 
@@ -263,6 +290,13 @@ A purchasable **Server Egg Shower** (49 R$) triggers an Egg Shower for everyone,
 | Gem packs | Dev product | 99 R$ for 100, 449 R$ for 550 |
 | Server Egg Shower | Dev product | 49 R$ |
 
+**Benchmark-based changes to consider [Proposed]** (from `research/benchmarks.md`; not yet agreed, prices still placeholders):
+- A cheap first purchase that removes a chore, 29–79 R$ (for example auto-sell Commons). Chicken Farm opens at 29 and 79 R$.
+- A luck ladder instead of the single Lucky Hatcher: 99 / 249 / 499 R$, effects stacking. Deep Fishing sells 99 / 249 / 599.
+- 2x Gold at 299–399 R$ instead of 199. Peers sell 2x currency at 399–499.
+- 1–3 signature dragons sold directly as gamepasses. They aren't random, so the paid random items rules don't apply. Hit a Golf Ball sells Forest Dragon, Gold Dragon and Kraken passes.
+- A VIP pass around 249 R$.
+
 Guardrails:
 - Never sell eggs or random dragons directly for Robux in MVP. If we add it later, show odds before purchase and respect `PolicyService` `ArePaidRandomItemsRestricted` for each player.
 - No purchase prompts in the first five minutes, and never a prompt in the middle of a tap.
@@ -272,32 +306,46 @@ Guardrails:
 
 ## 7. MVP and later
 
+Milestones below are **[Agreed]** as a roadmap. Scope inside each milestone can still move.
+
 ### M0: HTML prototype (this repo, now)
 
 Proves the core feeling: dig, discover an egg, hatch a cute dragon, buy the next upgrade.
 
-Included: 7 layers, 35 dragons, seals and pickaxe crafting, 4 gold upgrades, nests with skip, sell or keep, Dragondex, rebirth, gem upgrades, Auto Dig, Auto-Hatch, 3 events, simulated Robux store, saves in the browser, settings with timer speed and cheats for testing.
+Included: 7 layers, 35 dragons, seals and pickaxe crafting, Reinforce, 4 gold upgrades, nests with skip, sell or keep, Dragondex, the rebirth ladder, gem upgrades, Auto Dig, Auto-Hatch, 3 events, simulated Robux store, saves in the browser, mobile touch rules, settings with timer speed and cheats for testing.
 
-**Playtest questions** (watch 5–8 kids aged 7–12 for 10 minutes each):
+**Playtest questions** (watch 5–8 kids aged 7–12 for 10 minutes each, on phones as well as PC):
 1. Do they find and hatch the first egg without help?
 2. Do they say "aww" or name the dragon? Does the reveal land?
 3. Do they understand that the dragon is helping?
 4. Do they choose to sell or keep on their own, and why?
-5. Is the Stone Pick seal clear, or does it read as a bug?
+5. Is the Stone Pick seal clear, or does it read as a bug? Do they follow the Reinforce goals?
 6. Hold or tap: which do they use?
 7. At 10 minutes, do they want to continue?
 
 ### M1: Roblox vertical slice (about 4–6 weeks)
 
-Single shaft per player, layers 1–3, 3 eggs and 15 dragons, Strength and Swing Speed, pickaxes 1–3, nests 1–3, sell or keep, ProfileStore saves, one dev product (Hatch now) and one gamepass (2x Gold) wired end to end, and analytics funnel events. **Exit criteria:** the onboarding funnel (spawn, first dig, first egg, first hatch, first upgrade, Stone Pick) shows 70% or more of players reaching the Stone Pick in internal playtests, and a crash-free 30-minute session.
+Single shaft per player, layers 1–3, 3 eggs and 15 dragons, Strength and Swing Speed, pickaxes 1–3 with Reinforce, nests 1–3, sell or keep, ProfileStore saves, one dev product (Hatch now) and one gamepass (2x Gold) wired end to end, and analytics funnel events.
+
+**Exit criteria:**
+- The onboarding funnel (spawn, first dig, first egg, first hatch, first upgrade, Stone Pick) shows 70% or more of players reaching the Stone Pick in internal playtests.
+- A crash-free 30-minute session on a low-end phone.
 
 ### M2: Soft launch
 
-All 7 layers, rebirth, gem upgrades, Auto Dig and Auto-Hatch, 3 buff events, Dragondex, daily reward, global leaderboards (deepest, rebirths, Dragondex), full store, settings, and mobile, PC and console input passes.
+- **5 layers and 25 dragons.** Layers 6–7 are held back as the first two updates.
+- The rebirth ladder, gem upgrades, Auto Dig and Auto-Hatch, 3 buff events, daily reward, global leaderboards (deepest, rebirths, Dragondex), full store, settings, and mobile, PC and console input passes.
+- **Golden dragons** (and possibly Rainbow) as a second collection layer, so duplicates have value.
+- **Dragondex as silhouette slots with a reveal animation** when one is filled, plus rarity badges.
+- **Codes from day one,** tied to updates and to community milestones (likes, visits), with limited codes posted first on Discord. Codes that give gold are capped relative to your current layer, so they never skip the seal-and-craft beat.
+- **A numbered update every 1–2 weeks** with an update tag in the title ("[UPD1]"), an emoji title prefix, and ongoing thumbnail testing judged by D1/D7 retention, not clicks alone.
+- **A recurring weekend event** (benchmark: Chicken Farm's Saturday "Admin Abuse + Update" every ~3 weeks).
+- **A friend boost that works without chat,** because Roblox's discovery now rewards days played with friends and chat is age-gated.
+- **Retention targets:** day-1 retention of 15–20% or more and day-7 of 5% or more. The 2026 Roblox median is 10.3% and 1.6%; the top 1% is 22.2% and 9.1%.
 
 ### M3: Live ops (in priority order)
 
-Weekly limited egg, Golden merge, Wild Dragon minigame, quests and achievements, codes, offline digging, seasonal layer skins, group join reward, pickaxe skins. **Not planned:** trading (scams and moderation load), dragon combat, breeding, farming, deep crafting.
+Layers 6 and 7 as the first two updates, new rebirth rungs every update or two, weekly limited egg, Golden merge, Wild Dragon minigame, quests and achievements, offline digging, seasonal layer skins, group join reward, pickaxe skins. **Not planned:** trading (scams and moderation load), dragon combat, breeding, farming, deep crafting.
 
 ---
 
@@ -374,11 +422,26 @@ Client controllers: Mine (render and input), Camera, Pets (visuals), UI (React-L
 ## 10. Open questions
 
 1. Accept "Gold and Gems are currencies only" (section 0, item 1)?
-2. Rebirth at 150 m and the reset and keep table (section 5): too generous, or too harsh?
-3. Keep eggs and nests through rebirth?
-4. Should the first hatch be guaranteed Uncommon (current), or always a fixed signature dragon?
-5. Are 7 layers and 35 dragons right for launch, or 5 layers and 25 dragons with faster live-ops additions?
-6. Live event cadence: every 15 min, or tied to real-world clock times ("Golden Hour at :00")?
-7. The rejoin "lift" instead of saving the tunnel (section 8, Persistence)?
-8. Art direction for Roblox: blocky low-poly to match Roblox, or soft rounded "toy" shapes like the prototype's dragons?
-9. Robux price points and which gamepasses ship at soft launch.
+2. Keep eggs and nests through rebirth?
+3. Should the first hatch be guaranteed Uncommon (current), or always a fixed signature dragon?
+4. Live event cadence: every 15 min, or tied to real-world clock times ("Golden Hour at :00")?
+5. The rejoin "lift" instead of saving the tunnel (section 8, Persistence)?
+6. Art direction for Roblox: blocky low-poly to match Roblox, or soft rounded "toy" shapes like the prototype's dragons?
+7. Robux price points, which gamepasses ship at soft launch, and the benchmark-based store changes in section 6.
+
+Settled: the rebirth ladder (3.4), Reinforce (3.2), 5 layers at launch with layers 6–7 as updates (7), no offline digging before M3 (6).
+
+---
+
+## 11. Benchmarks
+
+Full research: `research/benchmarks.md` (raw notes in `research/notes/`). Every figure there came from search summaries, not the pages themselves, so check prices and player counts by hand before relying on them.
+
+| Benchmark | Game (confirmed) | What we take from it |
+|---|---|---|
+| Hit a Golf Ball | ⛳ Hit a Golf Ball, Tiny Loop | Hold-and-release verb; rebirth keeps your gear; signature pet passes (Forest Dragon, Gold Dragon, Kraken) |
+| Deep Fishing | Deep Fishing, LazyGames. | Rarity sits farther out (our depth); a long equipment ladder with a target every few minutes; luck pass ladder; weekly numbered updates with codes |
+| Collect Planets | Collect Planets, RockyStar Studios | Closest loop to ours (dig asteroids, hatch orbs into planets); silhouette collection slots with reveals; mutation tiers; friend boost |
+| Chicken Farm | Chicken Farm 🐣, Skandi Studios | The biggest of the four (peak ~124K players online at once); steep rebirth ladder extended by updates; cheap automation passes; Saturday update events |
+
+None of the four uses real-time hatch timers, so our timed nests are the main thing that sets the game apart.
