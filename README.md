@@ -8,3 +8,4 @@ A Roblox incremental simulator, prototyped in HTML first.
   - `game.js`: game logic and canvas rendering.
 - `tools/sim.js`: pacing sim that reads the same config. Run `node tools/sim.js 3` after changing numbers.
 - `AGENTS.md`: instructions for AI coding agents (`CLAUDE.md` points Claude Code to it).
+- `research/benchmarks.md`: benchmark research on comparable Roblox games, with recommendations for our design. Raw notes are in `research/notes/`.
