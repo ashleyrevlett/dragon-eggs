@@ -85,6 +85,9 @@
     // pickaxe's recipe (gold and materials), so it uses what the current layer drops. Resets on a new pickaxe.
     reinforce: { dmgMult: 1.5, costFrac: [0.25, 0.5] },
 
+    // One-time unlock: before it, every swing is a tap. Kept through rebirth.
+    holdDig: { name: 'Hold to Dig', desc: 'Hold on the ground to keep digging', cost: { gold: 25 } },
+
     // Gold upgrades. cost(level) = base * growth^level. All reset on rebirth.
     upgrades: {
       strength:   { name: 'Strength',    desc: 'Dig damage x1.12 (you and dragons)',     base: 12,  growth: 1.38, max: 200, per: 1.12 },

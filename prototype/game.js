@@ -31,7 +31,7 @@ const RAR = C.rarities;
 function newGame(keep) {
   const g = {
     v: 1, seed: (Math.random() * 2 ** 31) | 0,
-    gold: 0, gems: 0, mats: {}, pick: 0, reinforce: 0,
+    gold: 0, gems: 0, mats: {}, pick: 0, holdDig: false, reinforce: 0,
     up: { strength: 0, swing: 0, eggLuck: 0, hatchSpeed: 0 },
     gemUp: { goldBoost: 0, petPower: 0, hatchLuck: 0, autoHatch: 0 },
     nests: [null], nestBought: 0, basket: [],
@@ -339,6 +339,11 @@ function buyUpgrade(k) {
   S.gold -= c; S.up[k]++; SFX.buy();
   if (S.tut === 4) setTut(5);
 }
+function buyHoldDig() {
+  if (S.holdDig || !canAfford(C.holdDig.cost)) return;
+  pay(C.holdDig.cost); S.holdDig = true; SFX.buy();
+  banner('Hold to Dig!', 'Hold on the ground to keep digging', '#ffd84a');
+}
 function buyGemUpgrade(k) {
   const u = C.gemUpgrades[k], c = lvlCost(u, S.gemUp[k]);
   if (S.gemUp[k] >= u.max || S.gems < c) return;
@@ -390,7 +395,7 @@ function doRebirth() {
     gems: S.gems + next.gems,
     gemUp: S.gemUp, nests: S.nests, nestBought: S.nestBought, basket: S.basket, dragons: S.dragons, equipped: S.equipped,
     equipBought: S.equipBought, dex: S.dex, rebirths: S.rebirths + 1, bestDepth: Math.max(S.bestDepth, S.maxDepth),
-    tut: 9, passes: S.passes, settings: S.settings, stats: S.stats, nextId: S.nextId, firstEggPlaced: true,
+    holdDig: S.holdDig, tut: 9, passes: S.passes, settings: S.settings, stats: S.stats, nextId: S.nextId, firstEggPlaced: true,
   };
   S = newGame(keep);
   R.px = S.player.c; R.py = S.player.r; R.camY = S.player.r; R.path = []; R.target = null; R.lastLayer = 0;
@@ -439,7 +444,7 @@ function costChips(cost) {
 }
 function goalHtml() {
   switch (S.tut) {
-    case 0: return 'Tap the ground to dig. <b>Hold</b> to keep digging!';
+    case 0: return S.holdDig ? 'Tap the ground to dig. <b>Hold</b> to keep digging!' : '<b>Tap</b> the ground to dig!';
     case 1: return 'Something is glowing down there. <b>Dig to the egg!</b>';
     case 2: return 'Your egg is warming up in a <b>nest</b>. Keep digging!';
     case 3: return 'Your egg is ready! <b>Tap it</b> to hatch.';
@@ -448,6 +453,7 @@ function goalHtml() {
     const c = lvlCost(C.upgrades.strength, S.up.strength);
     return S.gold >= c ? 'Your dragon digs with you! Open the <b>Shop</b> and buy <b>Strength</b>.' : `Your dragon digs with you! Collect ${coinI} gold for an upgrade.`;
   }
+  if (!S.holdDig) return (canAfford(C.holdDig.cost) ? 'Tired of tapping? Buy <b>Hold to Dig</b> in the Shop!' : 'Tired of tapping? Save up for <b>Hold to Dig</b>.') + `<div class="need">${costChips(C.holdDig.cost)}</div>`;
   const rc = reinforceCost();
   if (rc) return `Reinforce your <b>${C.pickaxes[S.pick].name}</b> (${S.reinforce + 1}/${C.reinforce.costFrac.length}) for x${C.reinforce.dmgMult} damage<div class="need">${costChips(rc)}</div>`;
   const next = C.pickaxes[S.pick + 1];
@@ -495,7 +501,10 @@ const release = () => { R.holding = false; };
 cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); cv.addEventListener('pointerleave', release);
 window.addEventListener('keydown', e => {
   if (e.repeat) return;
-  if (e.key === ' ' || e.key === 'ArrowDown' || e.key === 's') { audio(); R.holding = true; R.keyHold = true; }
+  if (e.key === ' ' || e.key === 'ArrowDown' || e.key === 's') {
+    audio(); R.holding = true; R.keyHold = true;
+    if (!S.holdDig) R.keyTap = true; // without Hold to Dig, each key press is one tap on the block below
+  }
 });
 window.addEventListener('keyup', e => { if (R.keyHold) { R.holding = false; R.keyHold = false; } });
 
@@ -554,14 +563,24 @@ function updatePlayer(dt) {
 
   // Targeting and swinging.
   if (R.target && !isSolid(R.target[0], R.target[1])) R.target = null;
-  if (!R.target && R.holding && !R.moving) {
+  const hold = R.holding && S.holdDig;
+  if (R.holding && !S.holdDig && !R.keyHold) {
+    // Nudge kids who hold before they own Hold to Dig.
+    R.holdT = (R.holdT || 0) + dt;
+    if (R.holdT > 0.9 && R.t > (R.holdHintT || 0)) { addText(R.px + 0.5, R.py - 0.1, 'Tap, tap, tap!', '#ffd84a', 0.9, -0.8); R.holdHintT = R.t + 4; }
+  } else R.holdT = 0;
+  if (R.keyTap && !R.moving) {
+    R.keyTap = false; const b = [S.player.r + 1, S.player.c];
+    if (cellAt(b[0], b[1])) { R.target = b; R.pendingTap = true; R.manual = true; }
+  }
+  if (!R.target && hold && !R.moving) {
     const b = [S.player.r + 1, S.player.c]; const cell = cellAt(b[0], b[1]);
     if (cell && !sealLocked(cell)) { R.target = b; R.manual = true; }
   }
   const auto = S.settings.autoDig && autoDigUnlocked();
   if (auto && !R.target && !R.moving && !R.holding) { R.autoT -= dt; if (R.autoT <= 0) { R.autoT = 0.15; autoPick(); } }
   R.cd -= dt;
-  if (R.target && !R.moving && R.cd <= 0 && inReach(R.target[0], R.target[1]) && (R.holding || R.pendingTap || (auto && !R.manual))) { R.pendingTap = false; swing(); }
+  if (R.target && !R.moving && R.cd <= 0 && inReach(R.target[0], R.target[1]) && (hold || R.pendingTap || (auto && !R.manual))) { R.pendingTap = false; swing(); }
   if (R.target && !R.moving && !R.path.length && !inReach(R.target[0], R.target[1]) && !R.holding) R.target = null;
   R.swingAnim = Math.max(0, R.swingAnim - dt);
   R.sealWarnT -= dt;
@@ -902,7 +921,7 @@ function updateHud() {
   $('surfaceBtn').hidden = S.player.r < C.player.surfaceButtonDepth;
   $('autoBtn').hidden = !autoDigUnlocked(); $('autoBtn').classList.toggle('on', !!S.settings.autoDig);
   const shopCost = lvlCost(C.upgrades.strength, S.up.strength);
-  $('navShop').classList.toggle('pulse', S.tut === 4 && S.gold >= shopCost);
+  $('navShop').classList.toggle('pulse', (S.tut === 4 && S.gold >= shopCost) || (S.tut >= 5 && !S.holdDig && canAfford(C.holdDig.cost)));
   $('rebirthDot').hidden = S.maxDepth < rebirthDepth(); $('rebirthDot').textContent = '!';
   const pick = C.pickaxes[S.pick + 1]; $('shopDot').hidden = !(pick && canAfford(pick.cost)); $('shopDot').textContent = '!';
   $('soundBtn').textContent = S.settings.muted ? '✕' : '♪';
@@ -981,6 +1000,7 @@ function panelHtml() {
       h += `<div class="row"><canvas width="96" height="96" data-pick="${S.pick + 1}" style="width:44px;height:44px"></canvas><div class="grow"><div class="nm">${next.name} <span class="lv">x${fmt(next.dmg / cur.dmg)} damage</span></div><div class="ds">Breaks the ${C.layers[S.pick + 1] ? C.layers[S.pick + 1].name : 'deepest'} seal</div><div class="chips">${chips}</div></div><button class="btn alt" data-a="craft" ${canAfford(next.cost) ? '' : 'disabled'}>Craft</button></div>`;
     }
     h += `</div><div class="sec"><h4>Upgrades</h4>`;
+    h += `<div class="row"><div class="grow"><div class="nm">${C.holdDig.name} ${S.holdDig ? '<span class="lv">OWNED</span>' : ''}</div><div class="ds">${C.holdDig.desc}. Kept through rebirth.</div></div>${S.holdDig ? '' : costBtn(C.holdDig.cost, 'hold')}</div>`;
     for (const [k, u] of Object.entries(C.upgrades)) {
       const lv = S.up[k], max = lv >= u.max;
       h += `<div class="row"><div class="grow"><div class="nm">${u.name} <span class="lv">Lv ${lv}${max ? ' MAX' : ''}</span></div><div class="ds">${u.desc}</div></div>${max ? '' : costBtn({ gold: lvlCost(u, lv) }, 'up:' + k)}</div>`;
@@ -1042,7 +1062,7 @@ function panelHtml() {
       <div class="row"><div class="grow"><div class="nm">Start an event</div></div>${C.events.list.map(e => `<button class="btn alt" data-a="ev:${e.id}">${e.name}</button>`).join('')}</div>
       <div class="row"><div class="grow"><div class="nm">Stats</div><div class="ds">${S.stats.blocks} blocks · ${S.stats.eggs} eggs · ${S.stats.hatched} hatched · ${S.rebirths} rebirths · best ${Math.max(S.bestDepth, S.maxDepth)} m</div></div></div>
       <div class="row"><div class="grow"><div class="nm">Reset save</div><div class="ds">Wipes this browser's progress</div></div><button class="btn danger" data-a="${R.resetConfirm ? 'reset' : 'resetask'}">${R.resetConfirm ? 'Tap again' : 'Reset'}</button></div></div>
-      <div class="sec"><div class="note">Controls: tap or click a block next to open space to dig it. Hold to keep digging; holding digs straight down once the block breaks. Space or Down arrow also digs down. Tap open space to walk there.</div></div>`;
+      <div class="sec"><div class="note">Controls: tap or click a block next to open space to dig it. After you buy Hold to Dig, hold to keep digging; holding digs straight down once the block breaks. Space or Down arrow also digs down. Tap open space to walk there.</div></div>`;
   }
   return '';
 }
@@ -1069,6 +1089,7 @@ $('sheetBody').addEventListener('click', e => {
     case 'craft': craftPick(); break;
     case 'reinforce': reinforcePick(); break;
     case 'up': buyUpgrade(v); break;
+    case 'hold': buyHoldDig(); break;
     case 'gup': buyGemUpgrade(v); break;
     case 'nest': buyNest(); break;
     case 'eslot': buyEquipSlot(); break;

@@ -40,7 +40,7 @@ These shape everything else.
 | Input | Result |
 |---|---|
 | Tap a block next to open space | The character walks or climbs next to it (auto-path) and swings once. |
-| Hold on a block | Keeps swinging. When it breaks, keeps digging **straight down**. Holding is the "lazy" mode and the one most kids will use. |
+| Hold on a block | Needs the **Hold to Dig** unlock (25 gold, one-time, kept through rebirth). Keeps swinging. When it breaks, keeps digging **straight down**. Holding is the "lazy" mode and the one most kids will use. Before the unlock, every swing is a tap, and holding shows a "Tap, tap, tap!" nudge. **[Agreed]** |
 | Tap open space | Walk there. |
 | Keyboard (PC) | Space or Down digs down. Click works like tap. |
 
@@ -90,11 +90,12 @@ Target: **first egg under 20 s, first hatch under 45 s, first upgrade under 90 s
 
 | Time (sim) | Beat | How it's built |
 |---|---|---|
-| 0:00 | Spawn on the grassy surface. Goal pill: "Tap the ground to dig. Hold to keep digging!" An arrow bounces over the block below. | Topsoil breaks in 1–2 hits. Every block pays 1 gold. |
+| 0:00 | Spawn on the grassy surface. Goal pill: "Tap the ground to dig!" An arrow bounces over the block below. | Topsoil breaks in 1–2 hits. Every block pays 1 gold. |
 | 0:15 | **First egg.** A glowing egg sits 4 m straight down the starting column, so holding dig reaches it. Big sparkle, chime, "You found an egg!" It flies into nest 1. | The first egg is scripted at row 4, column 4. Its timer is 8 s instead of 15 s. |
 | 0:30 | **First hatch.** The nest pulses: "Tap it to hatch." The egg wobbles three times and cracks, then a dragon pops out with rays and its rarity. | The first hatch is guaranteed **Uncommon** (Puffbloom). The only button is "Dig together!" |
 | 0:30 | **First helper.** Puffbloom flies down and chews on blocks next to you. Pink damage numbers make its contribution visible. | It is auto-equipped into an empty slot. |
 | ~0:45 | **First purchase.** "Buy Strength in the Shop" and the Shop button pulses. Strength costs 12 gold. | Strength makes you **and** your dragons hit harder, which ties the two together. |
+| ~1:00 | **Hold to Dig.** "Tired of tapping? Buy Hold to Dig in the Shop!" (25 gold). Tapping is now optional. | A tangible first unlock: the controls themselves get better. |
 | 1–2 min | More eggs (about every 6–7 m, with a pity guarantee). A second egg has to wait for the nest, which shows the "2 eggs waiting" pressure that sells nest 2 (120 gold). First sell-or-keep choice. | |
 | ~0:40 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:25. | Small crafted goals before the big one. |
 | ~1:55 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 100, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
@@ -124,7 +125,7 @@ By the end of the first session (about 25–45 min) a player has crafted the Iro
 
 ### 3.2 Equipment **[Proposed]**
 
-Equipment is deliberately small: **one pickaxe** (crafted tiers) plus **four gold upgrades**.
+Equipment is deliberately small: **one pickaxe** (crafted tiers) plus **four gold upgrades** and the one-time **Hold to Dig** unlock.
 
 | Pickaxe | Damage | Recipe |
 |---|---|---|
@@ -321,7 +322,7 @@ Included: 7 layers, 35 dragons, seals and pickaxe crafting, Reinforce, 4 gold up
 3. Do they understand that the dragon is helping?
 4. Do they choose to sell or keep on their own, and why?
 5. Is the Stone Pick seal clear, or does it read as a bug? Do they follow the Reinforce goals?
-6. Hold or tap: which do they use?
+6. Before Hold to Dig, do they find tapping tiring or fun? After it, do they hold or keep tapping?
 7. At 10 minutes, do they want to continue?
 
 ### M1: Roblox vertical slice (about 4–6 weeks)

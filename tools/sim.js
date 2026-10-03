@@ -1,5 +1,5 @@
 // Rough pacing sim for prototype/config.js.
-// Models a greedy player who holds dig, detours to ~2.5 blocks per meter, keeps the best dragons
+// Models a greedy player who taps until Hold to Dig, then holds, detours to ~2.5 blocks per meter, keeps the best dragons
 // and sells the rest, and buys the cheapest useful upgrade. Approximate by design: use it to
 // spot pacing cliffs, then confirm by playing the prototype.
 // Usage: node tools/sim.js [rebirths=3]  (stops early at the end of the rebirth ladder)
@@ -11,6 +11,7 @@ const rbUnlocks = (n, u) => RB.slice(0, n).filter(r => r.unlock === u).length;
 const BLOCKS_PER_METER = 2.5;
 const MOVE_OVERHEAD = 0.12;       // seconds per block spent walking/falling
 const TAP_EFFICIENCY = 0.85;      // fraction of max swing rate a player actually sustains
+const TAP_ONLY_EFFICIENCY = 0.7;  // same, before Hold to Dig, when every swing is a tap
 const SPECIAL_BIAS = 1.4;         // players steer toward gold veins and eggs they can see
 
 const layerAt = d => { let L = C.layers[0]; for (const l of C.layers) if (d >= l.start) L = l; return L; };
@@ -27,7 +28,7 @@ function rarityRoll(rng) {
 function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
 const rng = mulberry(42);
-const meta = { rebirths: 0, dragons: [], gems: 0, incubators: C.incubators.start, t: 0 };
+const meta = { holdDig: false, rebirths: 0, dragons: [], gems: 0, incubators: C.incubators.start, t: 0 };
 
 for (let run = 0; run <= RUNS; run++) {
   const s = { d: 0, gold: 0, mats: {}, pick: 0, reinforce: 0, up: { strength: 0, swing: 0, eggLuck: 0, hatchSpeed: 0 }, eggs: [], incub: [], incubBought: meta.incubators - C.incubators.start };
@@ -53,7 +54,7 @@ for (let run = 0; run <= RUNS; run++) {
     const pGold = Math.min(0.5, w.gold / wt * SPECIAL_BIAS);
     const avgHpMult = (w.base * 1 + (wt - w.base - w.gold - w.gem) * C.blockKinds.vein.hpMult + w.gold * C.blockKinds.gold.hpMult + w.gem * C.blockKinds.gem.hpMult) / wt;
     const hp = L.hp * scale * avgHpMult;
-    const swings = (C.player.baseSwingsPerSec + s.up.swing * C.upgrades.swing.per) * TAP_EFFICIENCY;
+    const swings = (C.player.baseSwingsPerSec + s.up.swing * C.upgrades.swing.per) * (meta.holdDig ? TAP_EFFICIENCY : TAP_ONLY_EFFICIENCY);
     const playerDps = C.pickaxes[s.pick].dmg * Math.pow(C.reinforce.dmgMult, s.reinforce) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult * swings;
     const equipped = meta.dragons.slice().sort((a, b) => b.power - a.power).slice(0, C.equip.start + rbUnlocks(meta.rebirths, 'equipSlot'));
     const petDps = equipped.reduce((a, d) => a + d.power, 0) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult;
@@ -107,6 +108,7 @@ for (let run = 0; run <= RUNS; run++) {
     }
     const options = [];
     for (const [k, u] of Object.entries(C.upgrades)) if (s.up[k] < u.max) options.push({ cost: lvlCost(u, s.up[k]), buy: () => s.up[k]++, name: k });
+    if (!meta.holdDig) options.push({ cost: C.holdDig.cost.gold, buy: () => { meta.holdDig = true; milestone('buy Hold to Dig'); }, name: 'holdDig' });
     const ib = C.incubators.buy[s.incubBought];
     if (ib && ib.gold) options.push({ cost: ib.gold, buy: () => { s.incubBought++; meta.incubators++; milestone(`buy incubator #${meta.incubators}`); }, name: 'incubator' });
     options.sort((a, b) => a.cost - b.cost);
