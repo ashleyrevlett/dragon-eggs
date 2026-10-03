@@ -17,7 +17,7 @@ All numbers live in `prototype/config.js`. `tools/sim.js` reads the same file an
 These shape everything else.
 
 1. **Gold and Gems are currencies only. There are no "Gold" or "Gem" inventory items.** Digging a gold vein pays Gold directly, and digging a gem crystal pays Gems directly. The inventory resources are Wood, Stone and Iron, plus one new material per deeper layer (Crystal, Glowcap, Ember, Frost, Stardust). This removes the overlap the brief flagged, and "you dug gold, you got gold" needs no explanation for kids. **[Proposed]**
-2. **A 2D side-view shaft, 7 blocks wide, with tap-to-dig.** In Roblox this is a real 3D avatar in a shaft, with the camera locked to a side view. **[Proposed]**
+2. **A 2D side-view shaft, 7 blocks wide, with tap-to-dig.** **[Proposed]** In Roblox this is the real 3D Roblox avatar and 3D assets, with movement locked to 2D (left, right and jump on a fixed plane) and a side-on camera. **[Agreed]**
 3. **Dragons have one stat, Power, which is damage per second they deal to nearby blocks on their own.** Power scales with your Strength upgrades and rebirths but not with your pickaxe, so deeper eggs are what make dragons stronger. **[Proposed]** Dragons only dig while you do: they keep going for 1.5 s after your last swing (Auto Dig counts), then rest beside you. **[Agreed]**
 4. **Each layer has one egg type, and each egg type has five dragons, one per rarity.** That gives 35 dragons across 7 layers, which is a collectible Dragondex. **[Proposed]**
 5. **Layers are gated by seals.** The top row of each layer needs a minimum pickaxe tier, and the pickaxe is crafted from the previous layer's materials. This is the main use of crafting. **[Proposed]**
@@ -357,6 +357,8 @@ Layers 6 and 7 as the first two updates, new rebirth rungs every update or two, 
 
 ### Toolchain
 Rojo for files and Git, Wally for packages, Luau with `--!strict`, StyLua and Selene, TestEZ or Jest-Lua for unit tests on pure modules. `config.js` ports to `ReplicatedStorage/Shared/Config/*.luau` tables with the same shape, so we keep one source of truth during the port.
+
+**Current state (M1 in progress):** code lives in `roblox/src/` in Rojo's layout, so adopting Rojo later is a drop-in. Until then, `tools/roblox_build.js` generates `Config.luau` from `prototype/config.js` and a file manifest, and `tools/roblox_sync.luau` pulls the files into Studio over a localhost server. No Wally packages yet: UI is plain instances built in code, and saving uses in-memory profiles until the place is published (ProfileStore needs DataStores).
 
 ### World and camera
 - **Plots:** each server has about 8–12 shafts side by side under a shared surface hub (spawn, leaderboards, rebirth statue, event stage). Glass side walls let you see neighbours.

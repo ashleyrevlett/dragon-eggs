@@ -18,11 +18,16 @@ The game's single job is to make **digging, discovering an egg, hatching a cute 
 | `prototype/game.js` | Game logic, input, canvas rendering, UI panels. One IIFE, no modules. |
 | `tools/sim.js` | Pacing sim. Reads `config.js` and prints a timeline of milestones per rebirth run. |
 | `research/` | Benchmark research on comparable Roblox games (`benchmarks.md`) and its raw notes. |
+| `roblox/src/` | The Roblox build (M1 vertical slice), Rojo-style layout: `ReplicatedStorage/Shared` (config, rules, models), `ServerScriptService/Services` (Data, World, Mine, Egg, Shop), `StarterPlayer/StarterPlayerScripts/Controllers` (Camera, Input, Fx, Pets, UI). |
+| `roblox/src/ReplicatedStorage/Shared/Config.luau` | **Generated** from `prototype/config.js` by `tools/roblox_build.js`. Never edit it by hand. |
+| `roblox_studio/` | The local Studio place file. Code in it is a synced copy of `roblox/src`; don't edit scripts in Studio. |
+| `tools/roblox_build.js`, `tools/roblox_sync.luau` | Build the config and file manifest, then pull `roblox/src` into the open Studio place. |
 
 ## Running
 
 - **Prototype:** open `prototype/index.html` in a browser. There is no build step, no bundler and no dependencies. Progress saves to `localStorage` under the key `ddeggs.save.v1`.
 - **Sim:** `node tools/sim.js 3`. The argument is how many rebirths to simulate.
+- **Roblox:** serve the repo with `python3 -m http.server 8765 --bind 127.0.0.1` from the repo root, run `node tools/roblox_build.js`, then run `tools/roblox_sync.luau` in Studio (command bar or the Studio MCP's `execute_luau`). The sync parse-checks every script and turns HTTP on only while it runs. Then playtest in Studio. With the Studio MCP, a short bootstrap can fetch and `loadstring` the sync file instead of pasting it.
 - **In-game testing aids:** the ⚙ settings panel has hatch timer speed (1x, 5x, 30x), cheats (+gold, +gems, +egg), forced events and a save reset. In the browser console, `window.__game` exposes the live state `S`, runtime `R`, `C` (config), `hatch` and `startEvent`.
 
 ## Rules
