@@ -333,6 +333,7 @@ function Mine.init(c: any)
 	ctx = c
 	local R = ctx.remotes
 	R.Target.OnServerEvent:Connect(function(player, r, c2)
+		if not ctx.Guard.allow(player, "Target", 12) then return end
 		local st = states[player]
 		if not st or typeof(r) ~= "number" or typeof(c2) ~= "number" then return end
 		r, c2 = math.floor(r), math.floor(c2)
@@ -341,10 +342,12 @@ function Mine.init(c: any)
 		st.tapAt = os.clock()
 	end)
 	R.Hold.OnServerEvent:Connect(function(player, on)
+		if on == true and not ctx.Guard.allow(player, "Hold", 12) then return end -- a release is never dropped
 		local st = states[player]
 		if st then st.holding = on == true end
 	end)
 	R.Surface.OnServerEvent:Connect(function(player)
+		if not ctx.Guard.allow(player, "Surface", 1) then return end
 		local st = states[player]
 		if st and player.Character then spawnAtSurface(st, player.Character) end
 	end)

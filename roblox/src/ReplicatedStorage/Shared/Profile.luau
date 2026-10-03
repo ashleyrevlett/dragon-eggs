@@ -18,7 +18,7 @@ function Profile.new(): any
 		dragons = {}, equipped = {}, equipBought = 0, dex = {},
 		rebirths = 0, maxDepth = 0, bestDepth = 0,
 		firstEggPlaced = false, rowsSinceEgg = 0,
-		tut = 0, passes = {},
+		tut = 0, passes = {}, funnel = 0,
 		stats = { blocks = 0, eggs = 0, hatched = 0, sold = 0 }, nextId = 1,
 	}
 end

@@ -60,7 +60,7 @@ function Shop.init(c: any)
 	ctx.remotes.Shop.OnServerEvent:Connect(function(player, action, arg)
 		local p = ctx.Data.get(player)
 		local fn = typeof(action) == "string" and actions[action]
-		if not p or not fn then return end
+		if not p or not fn or not ctx.Guard.allow(player, "Shop", 8) then return end
 		fn(player, p, if typeof(arg) == "string" then arg else nil)
 		ctx.Data.touch(player)
 	end)

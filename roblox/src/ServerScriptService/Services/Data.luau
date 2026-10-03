@@ -18,7 +18,11 @@ function Data.init(c: any)
 		if acc < 0.1 then return end
 		acc = 0
 		for player in dirty do
-			if profiles[player] then ctx.remotes.State:FireClient(player, profiles[player], workspace:GetServerTimeNow()) end
+			local p = profiles[player]
+			if p then
+				ctx.Analytics.check(player, p)
+				ctx.remotes.State:FireClient(player, p, workspace:GetServerTimeNow())
+			end
 		end
 		table.clear(dirty)
 	end)

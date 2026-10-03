@@ -121,9 +121,14 @@ end
 function Egg.init(c: any)
 	ctx = c
 	local R = ctx.remotes
-	R.Hatch.OnServerEvent:Connect(function(player, i) if typeof(i) == "number" then hatch(player, math.floor(i)) end end)
-	R.Sell.OnServerEvent:Connect(function(player, id) if typeof(id) == "number" then sell(player, id) end end)
-	R.Equip.OnServerEvent:Connect(function(player, id) if typeof(id) == "number" then toggleEquip(player, id) end end)
+	local function guarded(name: string, perSec: number, fn: (Player, number) -> ())
+		R[name].OnServerEvent:Connect(function(player, n)
+			if typeof(n) == "number" and ctx.Guard.allow(player, name, perSec) then fn(player, math.floor(n)) end
+		end)
+	end
+	guarded("Hatch", 6, hatch)
+	guarded("Sell", 8, sell)
+	guarded("Equip", 8, toggleEquip)
 end
 
 return Egg

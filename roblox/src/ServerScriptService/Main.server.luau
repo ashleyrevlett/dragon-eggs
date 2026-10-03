@@ -19,9 +19,11 @@ local World = require(Services.World)
 local Mine = require(Services.Mine)
 local Egg = require(Services.Egg)
 local Shop = require(Services.Shop)
+local Analytics = require(Services.Analytics)
+local Guard = require(Services.Guard)
 
-local ctx = { remotes = remotes, Data = Data, World = World, Mine = Mine, Egg = Egg, Shop = Shop }
-for _, s in { Data, World, Mine, Egg, Shop } do s.init(ctx) end
+local ctx = { remotes = remotes, Data = Data, World = World, Mine = Mine, Egg = Egg, Shop = Shop, Analytics = Analytics, Guard = Guard }
+for _, s in { Guard, Analytics, Data, World, Mine, Egg, Shop } do s.init(ctx) end
 
 -- Studio-only test hook (the prototype's cheats): ServerStorage.Debug:Invoke(action, ...).
 if game:GetService("RunService"):IsStudio() then
