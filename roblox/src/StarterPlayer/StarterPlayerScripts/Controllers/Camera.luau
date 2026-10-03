@@ -33,7 +33,10 @@ function Camera.start(app: any)
 		local halfH = math.tan(math.rad(FOV / 2))
 		local dist = math.max(MIN_ROWS * Grid.CELL / 2 / halfH, MIN_COLS * Grid.CELL / 2 / (halfH * vp.X / vp.Y))
 		y = y + (p.Y - y) * math.min(1, dt * 6)
-		local lookY = y - MIN_ROWS * Grid.CELL * 0.14
+		-- Player sits about 40% down the screen; on short phones the HUD and goal pill take the top,
+		-- so drop them to the middle.
+		local below = if vp.Y < 450 then 0 else 0.1
+		local lookY = y - MIN_ROWS * Grid.CELL * below
 		local x = Grid.plotX(slot)
 		cam.CFrame = CFrame.lookAt(Vector3.new(x, lookY, dist), Vector3.new(x, lookY, 0))
 	end)

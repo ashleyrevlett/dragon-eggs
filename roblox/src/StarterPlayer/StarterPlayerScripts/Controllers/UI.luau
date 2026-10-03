@@ -81,16 +81,16 @@ function UI.start(app: any)
 
 	-- Menu column (left) ----------------------------------------------------------------------------
 	local menu = new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(10, 60), Size = UDim2.fromOffset(84, 300), Parent = gui },
-		{ new("UIListLayout", { Padding = UDim.new(0, 10) }) })
-	local dragonsB = button("Dragons", C.pink, { Name = "DragonsButton", Size = UDim2.fromOffset(84, 64), Parent = menu })
-	local shopB = button("Shop", C.good, { Name = "ShopButton", Size = UDim2.fromOffset(84, 64), Parent = menu })
-	local surfaceB = button("▲\nSurface", C.blue, { Name = "SurfaceButton", Size = UDim2.fromOffset(84, 64), Visible = false, Parent = menu })
+		{ new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }) })
+	local dragonsB = button("Dragons", C.pink, { Name = "DragonsButton", LayoutOrder = 1, Size = UDim2.fromOffset(84, 64), Parent = menu })
+	local shopB = button("Shop", C.good, { Name = "ShopButton", LayoutOrder = 2, Size = UDim2.fromOffset(84, 64), Parent = menu })
+	local surfaceB = button("▲\nSurface", C.blue, { Name = "SurfaceButton", LayoutOrder = 3, Size = UDim2.fromOffset(84, 64), Visible = false, Parent = menu })
 	local shopDot = new("Frame", { BackgroundColor3 = C.warn, Size = UDim2.fromOffset(18, 18), Position = UDim2.new(1, -10, 0, -8), Visible = false, Parent = shopB }, { corner(9) })
 
 	-- Nests (right) ---------------------------------------------------------------------------------
 	local nests = new("Frame", { AnchorPoint = Vector2.new(1, 0), BackgroundTransparency = 1, Position = UDim2.new(1, -10, 0, 60), Size = UDim2.fromOffset(96, 420), Parent = gui },
-		{ new("UIListLayout", { Padding = UDim.new(0, 8), HorizontalAlignment = Enum.HorizontalAlignment.Center }) })
-	label({ Text = "NESTS", Size = UDim2.fromOffset(96, 18), TextSize = 14, TextColor3 = C.muted, Parent = nests })
+		{ new("UIListLayout", { Padding = UDim.new(0, 8), HorizontalAlignment = Enum.HorizontalAlignment.Center, SortOrder = Enum.SortOrder.LayoutOrder }) })
+	local nestsLabel = label({ Text = "NESTS", LayoutOrder = 0, Size = UDim2.fromOffset(96, 18), TextSize = 14, TextColor3 = C.muted, Parent = nests })
 
 	-- Toasts and banner -----------------------------------------------------------------------------
 	local toasts = new("Frame", { AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, Position = UDim2.new(0.5, 0, 1, -20), Size = UDim2.fromOffset(460, 200), Parent = gui },
@@ -269,12 +269,17 @@ function UI.start(app: any)
 
 	-- Nest buttons ----------------------------------------------------------------------------------
 	local nestButtons: { TextButton } = {}
+	-- Short phones: smaller nests and no heading, so the column clears Roblox's jump button.
+	local short = workspace.CurrentCamera.ViewportSize.Y < 450
+	local nestH = if short then 64 else 96
+	nestsLabel.Visible = not short
+	if short then goalL.TextSize = 15 end
 	local buyNestB = button("+ Nest", C.panel2, { Name = "BuyNestButton", Size = UDim2.fromOffset(88, 56), TextSize = 16, LayoutOrder = 100, Parent = nests })
 	buyNestB.Activated:Connect(function() R.Shop:FireServer("nest") end)
 	local function buildNests(p: any)
 		while #nestButtons < #p.nests do
 			local i = #nestButtons + 1
-			local b = button("", C.panel2, { Name = "Nest" .. i, Size = UDim2.fromOffset(88, 96), LayoutOrder = i, TextSize = 16, TextYAlignment = Enum.TextYAlignment.Bottom, Parent = nests })
+			local b = button("", C.panel2, { Name = "Nest" .. i, Size = UDim2.fromOffset(88, nestH), LayoutOrder = i, TextSize = 16, TextYAlignment = Enum.TextYAlignment.Bottom, Parent = nests })
 			new("UIPadding", { PaddingBottom = UDim.new(0, 6), Parent = b })
 			b.Activated:Connect(function() R.Hatch:FireServer(i) end)
 			nestButtons[i] = b
