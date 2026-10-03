@@ -15,6 +15,7 @@
       reach: 1,              // Chebyshev distance from the player's cell
       moveCellsPerSec: 9,
       surfaceButtonDepth: 5, // show the Surface button once the player is this many rows down
+      dragonsDigForSec: 1.5, // dragons keep digging this long after your last swing, then rest
     },
 
     // Every broken block pays coin = layer.coin * (1 + layer.growth * metersIntoLayer).

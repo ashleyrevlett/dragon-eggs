@@ -174,7 +174,7 @@ function approach(r, c, B) {
 const R = {
   px: S.player.c, py: S.player.r, path: [], moving: false, target: null, holding: false, pendingTap: false,
   cd: 0, swingAnim: 0, face: 1, autoT: 0, pets: [], particles: [], shake: 0, camY: S.player.r, t: 0,
-  revealQ: [], reveal: null, sealWarnT: 0, lastLayer: layerIdx(Math.max(0, S.player.r)), petNumT: 0,
+  lastSwingT: -99, revealQ: [], reveal: null, sealWarnT: 0, lastLayer: layerIdx(Math.max(0, S.player.r)), petNumT: 0,
 };
 const EV = { t: 0, next: C.events.everySec * 0.6, active: null, idx: 0 };
 
@@ -502,7 +502,7 @@ window.addEventListener('keyup', e => { if (R.keyHold) { R.holding = false; R.ke
 // ---------------------------------------------------------------- update
 function swing() {
   const [r, c] = R.target; const cell = cellAt(r, c);
-  R.cd = 1 / swingRate(); R.swingAnim = 0.16; R.face = c < S.player.c ? -1 : c > S.player.c ? 1 : R.face;
+  R.cd = 1 / swingRate(); R.swingAnim = 0.16; R.lastSwingT = R.t; R.face = c < S.player.c ? -1 : c > S.player.c ? 1 : R.face;
   if (sealLocked(cell)) {
     SFX.clank(); R.shake = 0.06;
     if (R.sealWarnT <= 0) { addText(c + 0.5, r + 0.3, `Needs ${C.pickaxes[cell.t].name}`, '#ffb3b3', 1, -0.6); R.sealWarnT = 1.2; }
@@ -584,11 +584,13 @@ function updatePets(dt) {
   const mult = petMult();
   R.petNumT -= dt;
   let shownDmg = 0, shownAt = null;
+  const digging = R.t - R.lastSwingT < C.player.dragonsDigForSec;
   R.pets.forEach((p, i) => {
     p.t += dt;
+    if (!digging) p.target = null;
     if (p.target && !isSolid(p.target[0], p.target[1])) p.target = null;
     if (p.target && Math.max(Math.abs(p.target[0] - S.player.r), Math.abs(p.target[1] - S.player.c)) > 3) p.target = null;
-    if (!p.target) {
+    if (!p.target && digging) {
       p.retarget = (p.retarget || 0) - dt;
       if (p.retarget <= 0) {
         p.retarget = 0.4;
@@ -1008,7 +1010,7 @@ function panelHtml() {
   if (panel === 'dragons') {
     const eq = equippedDragons(), others = S.dragons.filter(d => !S.equipped.includes(d.id)).sort((a, b) => dragonPower(b) - dragonPower(a) || b.id - a.id);
     const commons = others.filter(d => d.i === 0);
-    let h = `<div class="sec"><h4>Digging with you · ${eq.length}/${equipCap()}</h4><div class="sub">Equipped dragons dig nearby blocks on their own: ${fmt(totalPetDps())} damage/s in total.</div>`;
+    let h = `<div class="sec"><h4>Digging with you · ${eq.length}/${equipCap()}</h4><div class="sub">Equipped dragons dig nearby blocks while you dig: ${fmt(totalPetDps())} damage/s in total.</div>`;
     h += eq.length ? `<div class="grid">${eq.map(d => dragonCard(d)).join('')}</div>` : `<div class="note">Hatch an egg to get your first dragon.</div>`;
     h += `<div class="chips" style="margin-top:8px"><button class="btn" data-a="best">Equip best</button>${commons.length ? `<button class="btn danger" data-a="sellcommon">Sell ${commons.length} unequipped Common (${coinI}${fmt(commons.reduce((a, d) => a + dragonSell(d), 0))})</button>` : ''}</div></div>`;
     h += `<div class="sec"><h4>Your dragons · ${S.dragons.length}/${C.equip.storageCap}</h4>${others.length ? `<div class="grid">${others.map(d => dragonCard(d)).join('')}</div>` : '<div class="note">Dragons you keep but do not equip wait here.</div>'}</div>`;
