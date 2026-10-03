@@ -15,6 +15,7 @@
       reach: 1,              // Chebyshev distance from the player's cell
       moveCellsPerSec: 9,
       surfaceButtonDepth: 5, // show the Surface button once the player is this many rows down
+      smashMaxBlocks: 5,     // a hit's leftover damage carries into the next block in line, up to this many blocks per swing
       dragonsDigForSec: 1.5, // dragons keep digging this long after your last swing, then rest
     },
 

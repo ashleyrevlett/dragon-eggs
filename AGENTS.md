@@ -35,7 +35,7 @@ The game's single job is to make **digging, discovering an egg, hatching a cute 
 
 ### Balance
 - Put numbers and content in `config.js`, never hard-coded in `game.js`. The one exception is pure presentation, such as particle counts or animation timing.
-- After any balance change, run `node tools/sim.js 7` (the whole rebirth ladder) and check the pacing targets in `DESIGN.md` sections 2 and 3.4. Current targets: first egg under 20 s, first hatch under 45 s, first upgrade under 90 s, second layer at 2–4 min, no stretch over about 5 min without a milestone, first rebirth at about 30 min in the sim (about 45–60 min for a real player), later runs 10–15 min each in the sim.
+- After any balance change, run `node tools/sim.js 7` (the whole rebirth ladder) and check the pacing targets in `DESIGN.md` sections 2 and 3.4. Current targets: first egg under 20 s, first hatch under 45 s, first upgrade under 90 s, second layer at 2–4 min, no stretch over about 5 min without a milestone, first rebirth at about 30 min in the sim (about 45–60 min for a real player), later runs about 6–8 min each in the sim. These are guides, not limits: faster later rebirths are fine.
 - The sim is a greedy, optimistic player. Treat it as a cliff detector, not a prediction.
 - If you add a mechanic that affects pacing, model it in `tools/sim.js` too.
 

@@ -206,6 +206,7 @@ const SFX = {
   clank: () => { tone(1900, 0.12, 'square', 0.04, 0, 0.7); noise(0.05, 0.08, 3000); },
   buy: () => { [784, 1175].forEach((f, i) => tone(f, 0.1, 'square', 0.05, i * 0.06)); },
   crack: () => { noise(0.05, 0.12, 2400); },
+  smash: (n) => { noise(0.25, 0.22, 260); tone(90, 0.22, 'sine', 0.16, 0, 0.4); tone(220 + n * 60, 0.12, 'square', 0.04, 0.05); },
   hatch: (tier) => { [523, 659, 784, 1047, 1319].slice(0, 3 + Math.min(2, tier)).forEach((f, i) => tone(f, 0.22, 'triangle', 0.1, i * 0.09)); },
   step: () => { noise(0.03, 0.03, 300); },
 };
@@ -239,7 +240,8 @@ function canAfford(cost) { return Object.entries(cost).every(([k, v]) => (k === 
 function pay(cost) { for (const [k, v] of Object.entries(cost)) { if (k === 'gold') S.gold -= v; else if (k === 'gems') S.gems -= v; else S.mats[k] -= v; } }
 function giveGold(n, x, y) { S.gold += n; if (x !== undefined) addText(x, y - 0.2, '+' + fmt(n), '#ffd84a', n > 0 ? 1 : 0.8); }
 
-function breakCell(r, c, byPet) {
+// quiet: skip the per-block coin number and break sound (a multi-block smash shows one total instead).
+function breakCell(r, c, byPet, quiet) {
   const cell = cellAt(r, c); if (!cell) return;
   const L = layerOf(r), cx = c + 0.5, cy = r + 0.5, depthT = layerIdx(r) / (C.layers.length - 1);
   S.rows[r][c] = null;
@@ -248,7 +250,7 @@ function breakCell(r, c, byPet) {
   const pal = L.colors;
   addChips(cx, cy, pal.a, 10); addChips(cx, cy, pal.dark, 5);
   R.shake = Math.max(R.shake, byPet ? 0.04 : 0.08);
-  SFX.brk();
+  if (!quiet) SFX.brk();
   if (cell.k === 'gold') { coin *= C.blockKinds.gold.coinMult; addSparks(cx, cy, '#ffd84a', 14); SFX.coin(); }
   if (cell.k === 'vein') {
     const [a, b] = C.blockKinds.vein.amount; const n = a + Math.floor(Math.random() * (b - a + 1));
@@ -259,11 +261,12 @@ function breakCell(r, c, byPet) {
     const g = C.blockKinds.gem.gems + Math.floor(layerIdx(r) / 2);
     S.gems += g; addText(cx, cy + 0.2, `+${g} gem${g > 1 ? 's' : ''}`, '#62e3ff', 1.1, -1.2); addSparks(cx, cy, '#62e3ff', 18); SFX.gem();
   }
-  giveGold(coin, cx, cy);
+  if (quiet) giveGold(coin); else giveGold(coin, cx, cy);
   if (cell.k === 'egg') findEgg(cell.e, cx, cy, cell.first);
   else { const e = activeEvent(); if (e && e.eggOnBreak && Math.random() < e.eggOnBreak) findEgg(L.egg, cx, cy); }
   if (R.target && R.target[0] === r && R.target[1] === c) R.target = null;
   if (S.tut === 0 && S.stats.blocks >= 3) setTut(1);
+  return coin;
 }
 
 function findEgg(eggId, x, y, first) {
@@ -503,7 +506,7 @@ window.addEventListener('keydown', e => {
   if (e.repeat) return;
   if (e.key === ' ' || e.key === 'ArrowDown' || e.key === 's') {
     audio(); R.holding = true; R.keyHold = true;
-    if (!S.holdDig) R.keyTap = true; // without Hold to Dig, each key press is one tap on the block below
+    R.keyTap = true; // every press is at least one tap on the block below, even a quick one
   }
 });
 window.addEventListener('keyup', e => { if (R.keyHold) { R.holding = false; R.keyHold = false; } });
@@ -518,12 +521,25 @@ function swing() {
     R.holding = false; R.target = null; return;
   }
   let dmg = hitDamage(); const crit = Math.random() < 0.1; if (crit) dmg *= 2;
-  cell.hp -= dmg;
   SFX.hit(layerIdx(r) / 6); if (crit) SFX.crit();
   addChips(c + 0.5, r + 0.5, layerOf(r).colors.b, 3, 2);
   addText(c + 0.5 + (Math.random() - 0.5) * 0.3, r + 0.3, (crit ? 'CRIT ' : '') + fmt(dmg), crit ? '#ffcf4a' : '#ffffff', crit ? 1.1 : 0.85, -1.6);
-  if (cell.hp <= 0) breakCell(r, c, false);
-  else if (cell.hp / cell.max < 0.34 && cell.hp + dmg >= cell.max * 0.34) SFX.crack();
+  // Smash: leftover damage carries into the next block in the same direction. Eggs and seals
+  // end the smash so finding an egg or opening a layer stays its own moment.
+  const dr = Math.sign(r - S.player.r), dc = Math.sign(c - S.player.c);
+  let left = dmg, n = 0, gold = 0, rr = r, cc = c, cur = cell;
+  for (;;) {
+    const hp = cur.hp; cur.hp -= left;
+    if (cur.hp > 0) { if (n === 0 && cur.hp / cur.max < 0.34 && hp >= cur.max * 0.34) SFX.crack(); break; }
+    left -= hp; n++;
+    const stop = cur.k === 'egg' || cur.k === 'seal';
+    gold += breakCell(rr, cc, false, true);
+    rr += dr; cc += dc; cur = cellAt(rr, cc);
+    if (stop || n >= C.player.smashMaxBlocks || left <= 0 || !cur || cur.k === 'seal') break;
+  }
+  if (!n) return;
+  SFX.brk(); if (n > 1) { SFX.smash(n); R.shake = 0.14; }
+  addText(c + 0.5, r + 0.3, (n > 1 ? `SMASH x${n}  +` : '+') + fmt(gold), '#ffd84a', n > 1 ? 1.2 : 1, -1.4);
 }
 
 function autoPick() {

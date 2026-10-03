@@ -46,6 +46,7 @@ These shape everything else.
 
 - **Exposed rule:** only blocks touching open space can be targeted, so the player carves a tunnel instead of sniping blocks at random. Reach is 1 block in every direction, including diagonals.
 - **Surface button:** once the player is 5 m down, a Surface button appears under the menus. It lifts them to the highest spot they can stand on (the grass, unless the top row is dug out), so blocks left behind above the shaft stay minable. It exists because a kid who digs straight to the seal without enough gold or materials could not climb back up. Free and unlimited. **[Proposed]**
+- **Smash:** a hit's leftover damage carries into the next block in the same direction, up to 5 blocks per swing (`smashMaxBlocks`). Everything broken pays out, one combined "SMASH x3 +gold" pop-up and a heavier crunch replace the per-block numbers, and gravity drops you to the next solid block. Eggs and seals end a smash, so finding an egg or opening a layer stays its own moment. Only your pickaxe smashes, not dragons. It shows up late in a layer, when going back up with Surface, and above all after rebirths. **[Agreed]**
 - **Gravity:** the character falls into holes. Falling three metres after breaking a floor is part of the fun.
 - **Swing rate:** 2.5 swings per second to start, upgradable. Taps are capped at the swing rate, with one buffered, so tapping fast gives no advantage over holding. This matters for fairness, mobile comfort and server rate limits.
 - **Feedback on every hit:** damage number, crack stage, chip particles, hit sound. Crits (10% chance, x2) add variance. A break adds a screen-shake tick, a coin pop and a material pop.
@@ -97,8 +98,8 @@ Target: **first egg under 20 s, first hatch under 45 s, first upgrade under 90 s
 | ~0:45 | **First purchase.** "Buy Strength in the Shop" and the Shop button pulses. Strength costs 12 gold. | Strength makes you **and** your dragons hit harder, which ties the two together. |
 | ~1:00 | **Hold to Dig.** "Tired of tapping? Buy Hold to Dig in the Shop!" (25 gold). Tapping is now optional. | A tangible first unlock: the controls themselves get better. |
 | 1–2 min | More eggs (about every 6–7 m, with a pity guarantee). A second egg has to wait for the nest, which shows the "2 eggs waiting" pressure that sells nest 2 (120 gold). First sell-or-keep choice. | |
-| ~0:40 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:25. | Small crafted goals before the big one. |
-| ~1:55 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 100, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
+| ~0:50 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:25. | Small crafted goals before the big one. |
+| ~2:05 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 100, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
 | 2–4 min | **Pebble Caverns.** Layer banner: "New egg: Pebble Egg". Blocks are visibly tougher, and Pebble dragons are 6x stronger than Meadow ones. | Shows that deeper means better eggs. |
 
 By the end of the first session (about 25–45 min) a player has crafted the Iron Pick, reached the Crystal Grotto, owns 2–3 nests and 3 equipped dragons, and can see the Rebirth button glowing ahead at 150 m.
@@ -217,7 +218,7 @@ Rebirth is a ladder, Chicken Farm style. Multipliers are steep and geometric, an
 - Past the last rung, the Rebirth menu says more rebirths arrive with updates. Plan about one new rung per update or two.
 - Every run regenerates the world from a new seed. What resets and what persists is in section 5.
 
-Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 28 min, then 15, 10, 12, 12, 13, 14 and 15 min per run, about 2 hours for all 8. Each run reaches a deeper layer, so later runs repeat faster but go further. Expect real players to take about 1.5–2x longer: first rebirth in roughly the first hour, the full ladder over several days of play.
+Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 28 min, then 15, 8, 6, 6, 6, 7 and 7 min per run, about 1.5 hours for all 8. Smash (section 1) is what makes later runs short: rebirth multipliers let a swing break 5 blocks in early layers. Faster later rebirths are fine; the targets are guides, not limits. **[Agreed]** Each run reaches a deeper layer, so later runs repeat faster but go further. Expect real players to take about 1.5–2x longer: first rebirth in roughly the first hour, the full ladder over several days of play.
 
 ---
 

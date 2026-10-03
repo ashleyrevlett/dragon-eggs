@@ -55,11 +55,14 @@ for (let run = 0; run <= RUNS; run++) {
     const avgHpMult = (w.base * 1 + (wt - w.base - w.gold - w.gem) * C.blockKinds.vein.hpMult + w.gold * C.blockKinds.gold.hpMult + w.gem * C.blockKinds.gem.hpMult) / wt;
     const hp = L.hp * scale * avgHpMult;
     const swings = (C.player.baseSwingsPerSec + s.up.swing * C.upgrades.swing.per) * (meta.holdDig ? TAP_EFFICIENCY : TAP_ONLY_EFFICIENCY);
-    const playerDps = C.pickaxes[s.pick].dmg * Math.pow(C.reinforce.dmgMult, s.reinforce) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult * swings;
+    const hit = C.pickaxes[s.pick].dmg * Math.pow(C.reinforce.dmgMult, s.reinforce) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult;
     const equipped = meta.dragons.slice().sort((a, b) => b.power - a.power).slice(0, C.equip.start + rbUnlocks(meta.rebirths, 'equipSlot'));
     const petDps = equipped.reduce((a, d) => a + d.power, 0) * Math.pow(C.upgrades.strength.per, s.up.strength) * rbMult;
-    const dps = playerDps + petDps;
-    const dt = Math.max(1 / swings, hp / dps) + MOVE_OVERHEAD;
+    // Smash: one swing breaks up to smashMaxBlocks blocks when a hit is worth several blocks' HP.
+    // Never faster than one swing per block, times the blocks a swing can smash.
+    const perSwing = Math.max(1, Math.min(C.player.smashMaxBlocks, Math.floor(hit / hp)));
+    const blocksPerSec = Math.min(swings * perSwing, (hit * swings + petDps) / hp);
+    const dt = 1 / blocksPerSec + MOVE_OVERHEAD;
     meta.t += dt;
     s.gold += L.coin * scale * (1 + pGold * (C.blockKinds.gold.coinMult - 1)) * goldMult;
     for (const [m, mw] of Object.entries(w)) if (C.materials[m]) s.mats[m] = (s.mats[m] || 0) + (mw / wt) * 1.5;
