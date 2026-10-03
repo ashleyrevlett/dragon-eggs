@@ -1,7 +1,11 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Dig for Dragon Eggs</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#160f24">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap">
@@ -25,7 +29,10 @@
   --font: "Fredoka", "Baloo 2", "Nunito", ui-rounded, system-ui, sans-serif;
   color-scheme: dark;
 }
-html, body { height: 100%; }
+/* No page zoom, font inflation or pull-to-refresh: pinch and double-tap are blocked here (touch-action
+   intersects down the tree), and game.js blocks the iOS-only gesture events that ignore user-scalable=no. */
+html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overscroll-behavior: none; }
+html, body { height: 100%; overscroll-behavior: none; }
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--night); color: var(--fg); font-family: var(--font); overflow: hidden;
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }

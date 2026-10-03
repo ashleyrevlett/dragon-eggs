@@ -1232,6 +1232,15 @@ function start() {
   ensureRows(); syncNestCount(); resize(); buildNests(); syncPets();
   R.px = S.player.c; R.py = S.player.r; R.camY = S.player.r;
   window.addEventListener('resize', () => { resize(); });
+  // Mobile Safari reports the new size late after rotation; resize again once it settles.
+  window.addEventListener('orientationchange', () => setTimeout(resize, 250));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => resize());
+  // Block page zoom that CSS can't: Safari pinch gestures, multi-finger moves, ctrl+wheel and trackpad pinch.
+  const block = e => e.preventDefault();
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, block, { passive: false }));
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  window.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', block);
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   setInterval(save, 4000);
   requestAnimationFrame(t => { last = t; frame(t); });

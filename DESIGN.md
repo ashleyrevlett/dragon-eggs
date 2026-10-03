@@ -58,7 +58,8 @@ Checked at iPhone SE and iPhone 15 sizes, in landscape and portrait.
 
 - **Every tap target is at least 44px** (Apple's minimum; Roblox's mobile guidance is similar). That covers HUD icons, close buttons, every Shop and Dragons button, and segmented toggles.
 - **Dig blocks are at least 48px.** On short screens the shaft shows fewer rows instead of shrinking blocks, and in portrait the side walls get thinner to keep 7 columns at full size.
-- **Long-press is hold-to-dig.** It never opens a context menu, text selection or the iOS callout, and controls don't wait on double-tap zoom.
+- **Long-press is hold-to-dig** (once Hold to Dig is unlocked). It never opens a context menu, text selection or the iOS callout, and controls don't wait on double-tap zoom.
+- **The page never zooms, scrolls or refreshes by accident.** Pinch, double-tap, ctrl+wheel and trackpad pinch are all blocked (including iOS Safari, which ignores `user-scalable=no`), iOS font inflation on rotation is off, pull-to-refresh is off, and the layout re-measures after rotation. Added to the home screen, it opens full screen. **[Agreed]**
 - **The goal pill stays compact:** one line of text plus a row of chips, with smaller type on short screens, so it never covers the player.
 - **Selling a Rare or better dragon takes two taps** ("Tap again to sell"), both in the Dragons menu and on the hatch reveal. Bigger buttons sit closer together, and kids mis-tap.
 - **In Roblox:** keep to the platform safe area (`GuiService:GetGuiInset`, ScreenGui `SafeAreaCompatibility`), keep the bottom-right thumb zone clear, and test on a real low-end Android phone.
