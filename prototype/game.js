@@ -401,6 +401,21 @@ function doRebirth() {
   save();
 }
 
+// Lift the player to the highest spot they can stand on, so blocks left behind above stay minable.
+function surface() {
+  let best = null;
+  for (let c = 0; c < COLS; c++) {
+    let r = 0; while (r <= S.genTo && !isSolid(r, c)) r++;
+    const score = r * 10 + Math.abs(c - 3);
+    if (!best || score < best.score) best = { r: r - 1, c, score };
+  }
+  S.player.r = best.r; S.player.c = best.c;
+  R.px = best.c; R.py = best.r; R.camY = best.r; R.vy = 0; R.path = []; R.target = null; R.holding = false;
+  R.pets = []; syncPets();
+  SFX.buy(); addChips(best.c + 0.5, best.r + 0.5, '#9fe3ff', 10, 3);
+  save();
+}
+
 function simulatePurchase(kind, id) {
   if (kind === 'pass') {
     S.passes[id] = true; syncNestCount(); refillNests(); buildNests();
@@ -882,6 +897,7 @@ function updateHud() {
   $('event').classList.toggle('on', !!ev);
   setText('event', ev ? `${ev.name} ${mmss(ev.ends - EV.t)}` : `Next event ${mmss(EV.next - EV.t)}`);
   const hint = goalHtml(); if (R.hintSig !== hint) { R.hintSig = hint; $('hint').innerHTML = hint; }
+  $('surfaceBtn').hidden = S.player.r < C.player.surfaceButtonDepth;
   $('autoBtn').hidden = !autoDigUnlocked(); $('autoBtn').classList.toggle('on', !!S.settings.autoDig);
   const shopCost = lvlCost(C.upgrades.strength, S.up.strength);
   $('navShop').classList.toggle('pulse', S.tut === 4 && S.gold >= shopCost);
@@ -1078,6 +1094,7 @@ document.querySelectorAll('.navb[data-open]').forEach(b => b.addEventListener('c
 $('sheetClose').onclick = closePanel;
 $('settingsBtn').onclick = () => { audio(); panel === 'settings' ? closePanel() : openPanel('settings'); };
 $('soundBtn').onclick = () => { audio(); S.settings.muted = !S.settings.muted; save(); };
+$('surfaceBtn').onclick = () => { audio(); surface(); };
 $('autoBtn').onclick = () => { audio(); S.settings.autoDig = !S.settings.autoDig; R.target = null; save(); };
 
 // ---------------------------------------------------------------- reveal and skip modals

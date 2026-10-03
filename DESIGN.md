@@ -45,6 +45,7 @@ These shape everything else.
 | Keyboard (PC) | Space or Down digs down. Click works like tap. |
 
 - **Exposed rule:** only blocks touching open space can be targeted, so the player carves a tunnel instead of sniping blocks at random. Reach is 1 block in every direction, including diagonals.
+- **Surface button:** once the player is 5 m down, a Surface button appears under the menus. It lifts them to the highest spot they can stand on (the grass, unless the top row is dug out), so blocks left behind above the shaft stay minable. It exists because a kid who digs straight to the seal without enough gold or materials could not climb back up. Free and unlimited. **[Proposed]**
 - **Gravity:** the character falls into holes. Falling three metres after breaking a floor is part of the fun.
 - **Swing rate:** 2.5 swings per second to start, upgradable. Taps are capped at the swing rate, with one buffered, so tapping fast gives no advantage over holding. This matters for fairness, mobile comfort and server rate limits.
 - **Feedback on every hit:** damage number, crack stage, chip particles, hit sound. Crits (10% chance, x2) add variance. A break adds a screen-shake tick, a coin pop and a material pop.

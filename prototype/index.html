@@ -65,6 +65,8 @@ button:focus-visible { outline: 3px solid var(--gem); outline-offset: 2px; }
 .navb[data-open="rebirth"] { background: #7a5cff; }
 #autoBtn { background: #5d4a8a; }
 #autoBtn.on { background: #ffb02e; color: #3a2200; text-shadow: none; }
+#surfaceBtn { background: #2f9fd0; }
+#surfaceBtn b { font-size: 20px; line-height: 1; }
 .navb .dot { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--warn); color: #fff; font-size: 12px; display: grid; place-items: center; padding: 0 5px; border: 2px solid var(--night); }
 .pulse { animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(255, 255, 255, .25); } }
@@ -199,6 +201,7 @@ button:focus-visible { outline: 3px solid var(--gem); outline-offset: 2px; }
     <button class="navb" data-open="shop" id="navShop"><canvas width="68" height="68" id="navShopIcon"></canvas>Shop<span class="dot" id="shopDot" hidden></span></button>
     <button class="navb" data-open="rebirth" id="navRebirth"><canvas width="68" height="68" id="navRebirthIcon"></canvas>Rebirth<span class="dot" id="rebirthDot" hidden></span></button>
     <button class="navb" id="autoBtn" hidden>AUTO<br>DIG</button>
+    <button class="navb" id="surfaceBtn" hidden><b>▲</b>Surface</button>
   </nav>
   <div id="mineWrap">
     <canvas id="mine"></canvas>

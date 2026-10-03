@@ -14,6 +14,7 @@
       baseSwingsPerSec: 2.5,
       reach: 1,              // Chebyshev distance from the player's cell
       moveCellsPerSec: 9,
+      surfaceButtonDepth: 5, // show the Surface button once the player is this many rows down
     },
 
     // Every broken block pays coin = layer.coin * (1 + layer.growth * metersIntoLayer).
