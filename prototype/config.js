@@ -70,7 +70,7 @@
     // Crafted in the Shop. Tier N is required to break the seal at the top of layer N.
     pickaxes: [
       { name: 'Twig Pick',     dmg: 1,      color: '#c48a4a', cost: {} },
-      { name: 'Stone Pick',    dmg: 7,      color: '#a7adb7', cost: { gold: 200,     stone: 30,  wood: 15 } },
+      { name: 'Stone Pick',    dmg: 7,      color: '#a7adb7', cost: { gold: 100,     stone: 30,  wood: 15 } },
       { name: 'Iron Pick',     dmg: 50,     color: '#d9c6b0', cost: { gold: 6000,    iron: 40,   stone: 80 } },
       { name: 'Crystal Pick',  dmg: 350,    color: '#c5a8ff', cost: { gold: 1e5,     crystal: 40, iron: 60 } },
       { name: 'Glowcap Pick',  dmg: 2500,   color: '#7cf5c9', cost: { gold: 1.5e6,   glowcap: 40, crystal: 60 } },

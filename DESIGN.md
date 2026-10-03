@@ -96,8 +96,8 @@ Target: **first egg under 20 s, first hatch under 45 s, first upgrade under 90 s
 | 0:30 | **First helper.** Puffbloom flies down and chews on blocks next to you. Pink damage numbers make its contribution visible. | It is auto-equipped into an empty slot. |
 | ~0:45 | **First purchase.** "Buy Strength in the Shop" and the Shop button pulses. Strength costs 12 gold. | Strength makes you **and** your dragons hit harder, which ties the two together. |
 | 1–2 min | More eggs (about every 6–7 m, with a pity guarantee). A second egg has to wait for the nest, which shows the "2 eggs waiting" pressure that sells nest 2 (120 gold). First sell-or-keep choice. | |
-| ~1:15 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:40. | Small crafted goals before the big one. |
-| ~2:10 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 200, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
+| ~0:40 | **First Reinforce.** The goal pill shows "Reinforce your Twig Pick (1/2) for x1.5 damage" with gold, Stone and Wood chips. A second Reinforce follows around 1:25. | Small crafted goals before the big one. |
+| ~1:55 | **The seal at 30 m.** The goal pill switches to the recipe: "Craft the Stone Pick: Gold 100, Stone 30, Wood 15". Crafting is a big moment: banner and "x7 damage". | Teaches crafting through the one recipe that matters. |
 | 2–4 min | **Pebble Caverns.** Layer banner: "New egg: Pebble Egg". Blocks are visibly tougher, and Pebble dragons are 6x stronger than Meadow ones. | Shows that deeper means better eggs. |
 
 By the end of the first session (about 25–45 min) a player has crafted the Iron Pick, reached the Crystal Grotto, owns 2–3 nests and 3 equipped dragons, and can see the Rebirth button glowing ahead at 150 m.
@@ -129,7 +129,7 @@ Equipment is deliberately small: **one pickaxe** (crafted tiers) plus **four gol
 | Pickaxe | Damage | Recipe |
 |---|---|---|
 | Twig | 1 | starting tool |
-| Stone | 7 | 200 gold, 30 Stone, 15 Wood |
+| Stone | 7 | 100 gold, 30 Stone, 15 Wood |
 | Iron | 50 | 6K gold, 40 Iron, 80 Stone |
 | Crystal | 350 | 100K gold, 40 Crystal, 60 Iron |
 | Glowcap | 2.5K | 1.5M gold, 40 Glowcap, 60 Crystal |
@@ -216,7 +216,7 @@ Rebirth is a ladder, Chicken Farm style. Multipliers are steep and geometric, an
 - Past the last rung, the Rebirth menu says more rebirths arrive with updates. Plan about one new rung per update or two.
 - Every run regenerates the world from a new seed. What resets and what persists is in section 5.
 
-Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 29 min, then 15, 10, 12, 12, 13, 14 and 15 min per run, about 2 hours for all 8. Each run reaches a deeper layer, so later runs repeat faster but go further. Expect real players to take about 1.5–2x longer: first rebirth in roughly the first hour, the full ladder over several days of play.
+Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 28 min, then 15, 10, 12, 12, 13, 14 and 15 min per run, about 2 hours for all 8. Each run reaches a deeper layer, so later runs repeat faster but go further. Expect real players to take about 1.5–2x longer: first rebirth in roughly the first hour, the full ladder over several days of play.
 
 ---
 
@@ -231,7 +231,7 @@ Sim pacing (greedy player, `node tools/sim.js 7`): rebirth 1 at about 29 min, th
 
 Balance assumptions:
 - Gold income per layer rises about 7x. Strength costs rise 1.38x per level and give 1.12x damage, so roughly 5–6 Strength levels per layer keep pace.
-- Each pickaxe costs a few hundred blocks' worth of gold from the layer before it (Stone Pick about 150 Meadow blocks, Iron Pick about 450 Caverns blocks), so players also buy Strength and sell spares along the way.
+- Each pickaxe from Iron up costs a few hundred blocks' worth of gold from the layer before it (Iron Pick about 450 Caverns blocks), so players also buy Strength and sell spares along the way. The Stone Pick is the exception at about 45 Meadow blocks (100 gold, down from 200), so a kid who reaches the seal after buying Strength and a nest isn't stuck short of gold. Its 30 Stone still takes about 90 blocks. Because Reinforce costs are a fraction of the next pickaxe, this also halves the gold for the two Twig Reinforces. **[Proposed]**
 - Gems are scarce on purpose (about 1 per 150 blocks early), so a gem purchase is a considered choice. Nothing essential sits behind gems before the first rebirth.
 
 ---
