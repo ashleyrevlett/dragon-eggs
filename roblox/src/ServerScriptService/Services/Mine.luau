@@ -376,6 +376,19 @@ function Mine.join(player: Player)
 	if player.Character then task.spawn(onChar, player.Character) end
 end
 
+-- Studio testing: clear the player's column from where they stand down to row toRow (seals are left in place).
+function Mine.debugClearColumn(player: Player, toRow: number)
+	local st = states[player]
+	if not st then return end
+	st.pr = toRow
+	ensureRows(st)
+	for r = 0, toRow - 1 do
+		local cell = cellAt(st, r, st.pc)
+		if cell and cell.k ~= "seal" then st.rows[r][st.pc] = false end
+	end
+	renderWindow(st)
+end
+
 function Mine.leave(player: Player)
 	states[player] = nil
 end
